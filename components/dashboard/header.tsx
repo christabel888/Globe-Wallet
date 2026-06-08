@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MobileNav } from "./mobile-nav"
+import { ThemeToggle } from "@/components/theme-toggle"
 import type { ReactNode } from "react"
 
 interface HeaderProps {
@@ -33,6 +34,7 @@ export function Header({ title, description, actions }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-2">
+          <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
