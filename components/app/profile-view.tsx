@@ -29,7 +29,7 @@ export function ProfileView() {
           <AvatarFallback className="bg-primary text-xl text-primary-foreground">TA</AvatarFallback>
         </Avatar>
         <h2 className="mt-3 text-lg font-bold text-foreground">Tunde Adeyemi</h2>
-        <p className="text-sm text-muted-foreground">tunde@stellarpay.app</p>
+        <p className="text-sm text-muted-foreground">tunde@globewallet.app</p>
         <span className="mt-2 flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
           <BadgeCheck className="h-3.5 w-3.5" /> Verified - Tier 3
         </span>
@@ -57,7 +57,7 @@ export function ProfileView() {
       </Button>
 
       <p className="mt-4 text-center text-[11px] text-muted-foreground">
-        StellarPay - Settled on the Stellar Network - v1.0.0
+        Globe Wallet - Settled on the Stellar Network - v1.0.0
       </p>
     </div>
   )

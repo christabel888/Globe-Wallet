@@ -1,8 +1,8 @@
-# ORBIT-WALLET Backend & Smart Contract Architecture
+# Globe Wallet Backend & Smart Contract Architecture
 
 ## Overview
 
-ORBIT-WALLET is built on a hybrid architecture combining traditional web services with Stellar blockchain integration. This document outlines the complete technical architecture for backend services, smart contracts, and blockchain interactions.
+Globe Wallet is built on a hybrid architecture combining traditional web services with Stellar blockchain integration. This document outlines the complete technical architecture for backend services, smart contracts, and blockchain interactions.
 
 ## Architecture Diagram
 
@@ -195,7 +195,7 @@ interface Price {
 
 ### Stellar Network Integration
 
-ORBIT-WALLET leverages Stellar's built-in features rather than custom smart contracts:
+Globe Wallet leverages Stellar's built-in features rather than custom smart contracts:
 
 #### 1. Multi-Signature Accounts
 ```javascript
@@ -499,4 +499,4 @@ GET    /api/v1/off-ramp/orders/:id/status
 
 ---
 
-This architecture document serves as the foundation for ORBIT-WALLET's technical implementation. All services are designed to be modular, scalable, and secure, following industry best practices for cryptocurrency wallet applications.
+This architecture document serves as the foundation for Globe Wallet's technical implementation. All services are designed to be modular, scalable, and secure, following industry best practices for cryptocurrency wallet applications.

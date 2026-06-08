@@ -1,4 +1,4 @@
-# ORBIT-WALLET
+# Globe Wallet
 
 A comprehensive Stellar blockchain wallet application built with Next.js, providing seamless cryptocurrency management and financial operations.
 
@@ -97,8 +97,8 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 
 ```bash
 # Clone the repository
-git clone https://github.com/Orbit-Wal/ORBIT-WALLET.git
-cd ORBIT-WALLET
+git clone https://github.com/Orbit-Wal/Globe-Wallet.git
+cd Globe-Wallet
 
 # Install dependencies
 pnpm install
