@@ -19,6 +19,14 @@ export interface Transaction {
   type: "in" | "out"
   category: "transfer" | "airtime" | "bills" | "savings" | "card" | "deposit"
   date: string
+  status?: "pending" | "completed" | "failed"
+  stellarHash?: string
+}
+
+export interface Balance {
+  asset: AssetCode | CurrencyCode
+  amount: number
+  priceUsd?: number
 }
 
 export interface CryptoAsset {
@@ -45,11 +53,59 @@ export interface OffRampMethod {
   initials: string
 }
 
+export interface TransactionResult {
+  success: boolean
+  hash?: string
+  error?: string
+}
+
+export interface SwapEstimate {
+  fromAsset: AssetCode
+  toAsset: AssetCode
+  fromAmount: number
+  toAmount: number
+  rate: number
+  fee: number
+}
+
+export interface WithdrawalOrder {
+  id: string
+  amount: number
+  asset: AssetCode
+  payoutAmount: number
+  payoutCurrency: CurrencyCode
+  status: "pending" | "processing" | "completed" | "failed"
+  methodId: string
+  createdAt: string
+}
+
 // Service interfaces
-export interface IAssetService {
-  getAssets(): CryptoAsset[]
+export interface IWalletService {
+  getAccountInfo(): StellarAccount
+  getBalance(): Promise<Balance[]>
+  sendPayment(destination: string, amount: number, asset: AssetCode, memo?: string): Promise<TransactionResult>
+  generateReceiveAddress(): string
+  validateAddress(address: string): boolean
+  getTransactionHistory(): Promise<Transaction[]>
+  shortenKey(key: string, lead?: number, tail?: number): string
+}
+
+export interface IExchangeService {
+  getCurrentRates(): Promise<Record<AssetCode, number>>
+  estimateSwap(from: AssetCode, to: AssetCode, amount: number): Promise<SwapEstimate>
+  executeSwap(from: AssetCode, to: AssetCode, amount: number): Promise<TransactionResult>
+}
+
+export interface IOffRampService {
+  getMethods(): OffRampMethod[]
+  initiateWithdrawal(amount: number, asset: AssetCode, methodId: string, targetCurrency: CurrencyCode): Promise<WithdrawalOrder>
+  getWithdrawalStatus(orderId: string): Promise<WithdrawalOrder>
+  getRates(): Record<CurrencyCode, number>
+}
+
+export interface IPricingService {
   getAssetPrice(code: AssetCode): Promise<number>
-  convertAsset(from: AssetCode, to: AssetCode, amount: number): number
+  getAssets(): CryptoAsset[]
   formatAsset(amount: number, code: AssetCode, hidden?: boolean): string
 }
 
@@ -57,22 +113,14 @@ export interface IFiatService {
   getWallets(): Wallet[]
   formatMoney(amount: number, currency: CurrencyCode, hidden?: boolean): string
   convertCurrency(from: CurrencyCode, to: CurrencyCode, amount: number): number
-  getExchangeRate(from: CurrencyCode, to: CurrencyCode): number
-}
-
-export interface IStellarService {
-  getAccountInfo(): StellarAccount
-  generateReceiveAddress(): string
-  validateAddress(address: string): boolean
-  shortenKey(key: string, lead?: number, tail?: number): string
-  getOffRampMethods(): OffRampMethod[]
-  getOffRampRate(currency: CurrencyCode): number
 }
 
 export interface IFinanceServiceContainer {
-  asset: IAssetService
+  wallet: IWalletService
+  exchange: IExchangeService
+  offRamp: IOffRampService
+  pricing: IPricingService
   fiat: IFiatService
-  stellar: IStellarService
 }
 
 // Error types

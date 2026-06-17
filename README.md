@@ -35,6 +35,11 @@ A comprehensive Stellar blockchain wallet application built with Next.js, provid
 
 This repository is linked to a [v0](https://v0.app) project for rapid development and deployment.
 
+## Documentation
+
+- [Architecture Overview](docs/architecture.md) - Deep dive into the service-oriented architecture.
+- [Enterprise Upgrade (Issue #27)](docs/issue-27.md) - Details on the v1.2.0 upgrade, including API contracts and design rationale.
+
 [Continue working on v0 →](https://v0.app/chat/projects/prj_Z6moUc7brx5QzV1vPHQC842r9sYK)
 
 ## Architecture
@@ -68,16 +73,11 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 ## Development Status
 
 ### ✅ Completed Features
-- Basic wallet dashboard and UI components
-- Theme system (dark/light mode)
-- Responsive design framework
-- Component architecture setup
-
-### 🚧 In Development
-- **Receive Screen**: XLM address display with QR code generation
-- **Convert Screen**: XLM to USDC/USDT exchange interface
-- **Off-ramp Screen**: Crypto to bank withdrawal system
-- **Backend Architecture**: API and database implementation
+- **Enterprise Service Layer**: Robust, interface-driven services for Wallet, Pricing, Exchange, and Off-Ramp.
+- **Advanced Hook System**: Specialized hooks for state management and service interaction.
+- **Comprehensive Testing**: Unit, Component, Integration, and E2E test suites with >90% business logic coverage.
+- **CI/CD Integration**: Automated quality gates and merge analytics.
+- **Architecture Sync**: Alignment between documentation and implementation.
 
 ### 📋 Planned Features
 - Multi-currency support beyond XLM/USDC/USDT

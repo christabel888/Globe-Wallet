@@ -77,29 +77,20 @@ Globe Wallet is built on a hybrid architecture combining traditional web service
 Manages user wallet operations and Stellar blockchain interactions.
 
 ```typescript
-interface WalletService {
-  // Account Management
-  createAccount(userId: string): Promise<WalletAccount>
-  importAccount(privateKey: string, userId: string): Promise<WalletAccount>
-  getBalance(publicKey: string): Promise<Balance[]>
-  
-  // Transactions
-  sendPayment(params: SendPaymentParams): Promise<TransactionResult>
-  receivePayment(publicKey: string): Promise<PaymentRequest>
-  getTransactionHistory(publicKey: string): Promise<Transaction[]>
-  
-  // Address & QR Management
-  generateQRCode(publicKey: string, amount?: number): Promise<string>
+interface IWalletService {
+  getAccountInfo(): StellarAccount
+  getBalance(): Promise<Balance[]>
+  sendPayment(destination: string, amount: number, asset: AssetCode, memo?: string): Promise<TransactionResult>
+  generateReceiveAddress(): string
   validateAddress(address: string): boolean
+  getTransactionHistory(): Promise<Transaction[]>
+  shortenKey(key: string, lead?: number, tail?: number): string
 }
 
-interface WalletAccount {
-  id: string
-  userId: string
+interface StellarAccount {
   publicKey: string
-  encryptedPrivateKey: string // Encrypted with user password
-  createdAt: Date
-  lastActivity: Date
+  memo: string
+  network: string
 }
 ```
 
@@ -108,27 +99,19 @@ interface WalletAccount {
 Handles currency conversions using Stellar DEX and liquidity pools.
 
 ```typescript
-interface ExchangeService {
-  // Rate Management
-  getCurrentRates(): Promise<ExchangeRate[]>
-  getHistoricalRates(from: string, to: string, period: string): Promise<RateHistory[]>
-  
-  // Trading
-  getOrderBook(selling: Asset, buying: Asset): Promise<OrderBook>
-  createSwapTransaction(params: SwapParams): Promise<TransactionResult>
-  estimateSwap(params: SwapParams): Promise<SwapEstimate>
-  
-  // Liquidity
-  getLiquidityPools(): Promise<LiquidityPool[]>
-  addLiquidity(params: LiquidityParams): Promise<TransactionResult>
+interface IExchangeService {
+  getCurrentRates(): Promise<Record<AssetCode, number>>
+  estimateSwap(from: AssetCode, to: AssetCode, amount: number): Promise<SwapEstimate>
+  executeSwap(from: AssetCode, to: AssetCode, amount: number): Promise<TransactionResult>
 }
 
-interface SwapParams {
-  fromAsset: Asset
-  toAsset: Asset
-  amount: string
-  slippageTolerance: number
-  publicKey: string
+interface SwapEstimate {
+  fromAsset: AssetCode
+  toAsset: AssetCode
+  fromAmount: number
+  toAmount: number
+  rate: number
+  fee: number
 }
 ```
 
@@ -137,28 +120,22 @@ interface SwapParams {
 Manages cryptocurrency to fiat conversions and bank transfers.
 
 ```typescript
-interface OffRampService {
-  // Payment Methods
-  addPaymentMethod(userId: string, method: PaymentMethodData): Promise<PaymentMethod>
-  getPaymentMethods(userId: string): Promise<PaymentMethod[]>
-  verifyPaymentMethod(methodId: string): Promise<VerificationResult>
-  
-  // Withdrawals
-  initiateWithdrawal(params: WithdrawalParams): Promise<WithdrawalOrder>
-  getWithdrawalStatus(orderId: string): Promise<WithdrawalStatus>
-  processWithdrawal(orderId: string): Promise<ProcessingResult>
-  
-  // Compliance
-  performKYC(userId: string, documents: KYCDocuments): Promise<KYCResult>
-  checkTransactionLimits(userId: string, amount: number): Promise<LimitCheck>
+interface IOffRampService {
+  getMethods(): OffRampMethod[]
+  initiateWithdrawal(amount: number, asset: AssetCode, methodId: string, targetCurrency: CurrencyCode): Promise<WithdrawalOrder>
+  getWithdrawalStatus(orderId: string): Promise<WithdrawalOrder>
+  getRates(): Record<CurrencyCode, number>
 }
 
-interface WithdrawalParams {
-  userId: string
+interface WithdrawalOrder {
+  id: string
   amount: number
-  asset: string
-  paymentMethodId: string
-  memo?: string
+  asset: AssetCode
+  payoutAmount: number
+  payoutCurrency: CurrencyCode
+  status: "pending" | "processing" | "completed" | "failed"
+  methodId: string
+  createdAt: string
 }
 ```
 
@@ -167,18 +144,10 @@ interface WithdrawalParams {
 Provides real-time and historical pricing data for all supported assets.
 
 ```typescript
-interface PricingService {
-  // Real-time Prices
-  getCurrentPrice(asset: string, currency: string): Promise<Price>
-  getCurrentPrices(assets: string[], currency: string): Promise<Price[]>
-  
-  // Historical Data
-  getHistoricalPrices(asset: string, period: TimePeriod): Promise<PriceHistory[]>
-  getPriceChart(asset: string, period: TimePeriod): Promise<ChartData>
-  
-  // Market Data
-  getMarketStats(asset: string): Promise<MarketStats>
-  getTrendingAssets(): Promise<Asset[]>
+interface IPricingService {
+  getAssetPrice(code: AssetCode): Promise<number>
+  getAssets(): CryptoAsset[]
+  formatAsset(amount: number, code: AssetCode, hidden?: boolean): string
 }
 
 interface Price {
@@ -496,6 +465,57 @@ GET    /api/v1/off-ramp/orders/:id/status
 - Institutional trading features
 - White-label solutions
 - Regulatory compliance automation
+
+### Sequence Diagrams
+
+#### Payment Flow (Send)
+```mermaid
+sequenceDiagram
+    participant User
+    participant SendForm
+    participant useWallet
+    participant WalletService
+    participant API
+    participant Stellar
+
+    User->>SendForm: Enter Recipient & Amount
+    SendForm->>useWallet: send(address, amount)
+    useWallet->>WalletService: validateAddress(address)
+    WalletService-->>useWallet: true
+    useWallet->>WalletService: sendPayment(dest, amt, asset)
+    WalletService->>Stellar: Build & Sign Transaction
+    Stellar-->>WalletService: Transaction Result
+    WalletService->>API: POST /api/issue-27 (Verify)
+    API-->>WalletService: 200 OK (Verified)
+    WalletService-->>useWallet: Success(hash)
+    useWallet-->>SendForm: Update UI (Success)
+    SendForm-->>User: Show Receipt
+```
+
+#### Asset Exchange Flow (Swap)
+```mermaid
+sequenceDiagram
+    participant User
+    participant ConvertScreen
+    participant useExchange
+    participant ExchangeService
+    participant StellarDEX
+
+    User->>ConvertScreen: Select From/To Assets
+    ConvertScreen->>useExchange: getQuote(from, to, amount)
+    useExchange->>ExchangeService: estimateSwap(from, to, amount)
+    ExchangeService->>StellarDEX: Query Path Payment
+    StellarDEX-->>ExchangeService: Best Rate
+    ExchangeService-->>useExchange: SwapEstimate
+    useExchange-->>ConvertScreen: Display Quote
+    User->>ConvertScreen: Confirm Swap
+    ConvertScreen->>useExchange: executeSwap()
+    useExchange->>ExchangeService: executeSwap(...)
+    ExchangeService->>StellarDEX: Submit Path Payment
+    StellarDEX-->>ExchangeService: Success
+    ExchangeService-->>useExchange: Result
+    useExchange-->>ConvertScreen: Show Success
+```
 
 ---
 

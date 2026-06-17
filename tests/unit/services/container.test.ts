@@ -1,24 +1,38 @@
 import { FinanceServiceContainer } from '../../../lib/services/container'
-import { AssetService } from '../../../lib/services/asset.service'
+import { WalletService } from '../../../lib/services/wallet.service'
+import { ExchangeService } from '../../../lib/services/exchange.service'
+import { OffRampService } from '../../../lib/services/off-ramp.service'
+import { PricingService } from '../../../lib/services/pricing.service'
 import { FiatService } from '../../../lib/services/fiat.service'
-import { StellarService } from '../../../lib/services/stellar.service'
 
 describe('FinanceServiceContainer', () => {
   it('should create with default services', () => {
     const container = new FinanceServiceContainer()
-    expect(container.asset).toBeInstanceOf(AssetService)
+    expect(container.wallet).toBeInstanceOf(WalletService)
+    expect(container.exchange).toBeInstanceOf(ExchangeService)
+    expect(container.offRamp).toBeInstanceOf(OffRampService)
+    expect(container.pricing).toBeInstanceOf(PricingService)
     expect(container.fiat).toBeInstanceOf(FiatService)
-    expect(container.stellar).toBeInstanceOf(StellarService)
   })
 
   it('should accept injected services', () => {
-    const mockAsset = {} as any
+    const mockWallet = {} as any
+    const mockExchange = {} as any
+    const mockOffRamp = {} as any
+    const mockPricing = {} as any
     const mockFiat = {} as any
-    const mockStellar = {} as any
 
-    const container = new FinanceServiceContainer(mockAsset, mockFiat, mockStellar)
-    expect(container.asset).toBe(mockAsset)
+    const container = new FinanceServiceContainer(
+      mockWallet,
+      mockExchange,
+      mockOffRamp,
+      mockPricing,
+      mockFiat
+    )
+    expect(container.wallet).toBe(mockWallet)
+    expect(container.exchange).toBe(mockExchange)
+    expect(container.offRamp).toBe(mockOffRamp)
+    expect(container.pricing).toBe(mockPricing)
     expect(container.fiat).toBe(mockFiat)
-    expect(container.stellar).toBe(mockStellar)
   })
 })

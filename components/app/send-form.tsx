@@ -1,129 +1,167 @@
 "use client"
 
-import { useState } from "react"
-import { Check, CheckCircle2 } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useState, useMemo } from "react"
+import { Send, CheckCircle2, AlertCircle, Loader2, Coins } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { contacts, wallets, formatMoney, type CurrencyCode } from "@/lib/finance-data"
-import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useWallet, usePricing } from "@/hooks/useFinanceServices"
+import { useBalances } from "@/hooks/useBalances"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function SendForm() {
-  const [currency, setCurrency] = useState<CurrencyCode>("NGN")
-  const [contactId, setContactId] = useState<string>(contacts[0].id)
+  const { sendPayment, validateAddress, isProcessing } = useWallet()
+  const { formatAsset } = usePricing()
+  const { assets } = useBalances()
+
+  const [address, setAddress] = useState("")
   const [amount, setAmount] = useState("")
-  const [sent, setSent] = useState(false)
+  const [selectedAsset, setSelectedAsset] = useState("XLM")
+  const [memo, setMemo] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
-  const wallet = wallets.find((w) => w.code === currency)!
-  const selected = contacts.find((c) => c.id === contactId)!
-  const numericAmount = Number.parseFloat(amount) || 0
-  const canSend = numericAmount > 0 && numericAmount <= wallet.balance
+  const currentAssetBalance = useMemo(() => {
+    return assets.find(a => a.code === selectedAsset)?.balance || 0
+  }, [assets, selectedAsset])
 
-  if (sent) {
-    return (
-      <div className="flex flex-col items-center px-4 pt-16 text-center">
-        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/15 text-primary animate-slide-in-up">
-          <CheckCircle2 className="h-12 w-12" />
-        </span>
-        <h2 className="mt-6 text-xl font-bold text-foreground">Transfer successful</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          You sent {formatMoney(numericAmount, currency)} to {selected.name}
-        </p>
-        <Card className="mt-6 w-full p-4 text-left">
-          <Row label="Recipient" value={selected.name} />
-          <Row label="Handle" value={selected.handle} />
-          <Row label="Amount" value={formatMoney(numericAmount, currency)} />
-          <Row label="Fee" value={formatMoney(0, currency)} />
-          <Row label="Settled via" value="Stellar Network" />
-        </Card>
-        <Button
-          className="mt-6 w-full"
-          onClick={() => {
-            setSent(false)
-            setAmount("")
-          }}
-        >
-          Send another
-        </Button>
-      </div>
-    )
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSuccess(null)
+
+    if (!validateAddress(address)) {
+      setError("Invalid Stellar address")
+      return
+    }
+
+    const numAmount = parseFloat(amount)
+    if (isNaN(numAmount) || numAmount <= 0) {
+      setError("Please enter a valid amount")
+      return
+    }
+
+    if (numAmount > currentAssetBalance) {
+      setError(`Insufficient ${selectedAsset} balance`)
+      return
+    }
+
+    try {
+      const result = await sendPayment(address, numAmount, selectedAsset as any, memo)
+      if (result.status === "completed") {
+        setSuccess(`Successfully sent ${formatAsset(numAmount, selectedAsset as any)} to ${address.slice(0, 8)}...`)
+        setAddress("")
+        setAmount("")
+        setMemo("")
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to send payment")
+    }
   }
 
   return (
-    <div className="px-4 pt-5">
-      <div className="mb-5 flex justify-center gap-1.5 rounded-full bg-secondary p-1">
-        {wallets.map((w) => (
-          <button
-            key={w.code}
-            type="button"
-            onClick={() => setCurrency(w.code)}
-            className={cn(
-              "flex-1 rounded-full py-2 text-xs font-semibold transition-all",
-              currency === w.code ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground",
-            )}
-          >
-            {w.code}
-          </button>
-        ))}
-      </div>
+    <Card className="w-full max-w-md border-primary/20 shadow-2xl bg-card/50 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Send className="w-5 h-5 text-primary" />
+          Send Assets
+        </CardTitle>
+        <CardDescription>Transfer Lumens or tokens securely to any Stellar address.</CardDescription>
+      </CardHeader>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="address" className="text-sm font-medium">Recipient Address</label>
+            <Input
+              id="address"
+              placeholder="e.g. GDXSPAY..."
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="bg-background/50"
+            />
+          </div>
 
-      <div className="rounded-2xl bg-card p-6 text-center shadow-sm">
-        <p className="text-xs text-muted-foreground">Amount to send</p>
-        <div className="mt-2 flex items-center justify-center gap-1">
-          <span className="text-2xl font-semibold text-muted-foreground">{wallet.symbol}</span>
-          <input
-            inputMode="decimal"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-            className="w-40 bg-transparent text-center text-4xl font-bold text-foreground outline-none placeholder:text-muted-foreground/40"
-          />
-        </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Balance: {formatMoney(wallet.balance, currency)}
-        </p>
-      </div>
-
-      <p className="mb-2 mt-6 text-sm font-semibold text-foreground">Send to</p>
-      <div className="space-y-2">
-        {contacts.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => setContactId(c.id)}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all",
-              contactId === c.id ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-secondary",
-            )}
-          >
-            <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-secondary text-foreground">{c.initials}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">{c.name}</p>
-              <p className="text-xs text-muted-foreground">{c.handle}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2 space-y-2">
+              <label htmlFor="amount" className="text-sm font-medium">Amount</label>
+              <Input
+                id="amount"
+                type="number"
+                step="any"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="bg-background/50"
+              />
             </div>
-            {contactId === c.id && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <Check className="h-3 w-3" />
-              </span>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Asset</label>
+              <Select value={selectedAsset} onValueChange={setSelectedAsset}>
+                <SelectTrigger className="bg-background/50">
+                  <SelectValue placeholder="Asset" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assets.map(asset => (
+                    <SelectItem key={asset.code} value={asset.code}>
+                      <div className="flex items-center gap-2">
+                        <Coins className="w-4 h-4 text-primary" />
+                        {asset.code}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center px-1">
+            <p className="text-xs text-muted-foreground italic">
+              Balance: {formatAsset(currentAssetBalance, selectedAsset as any)}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="memo" className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+              Memo <span className="text-[10px] uppercase font-bold opacity-50 px-1.5 py-0.5 bg-muted rounded">Optional</span>
+            </label>
+            <Input
+              id="memo"
+              placeholder="Transaction note"
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              className="bg-background/50 h-8 text-sm"
+            />
+          </div>
+
+          {error && (
+            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-start gap-2 animate-in fade-in zoom-in-95 duration-200">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="p-3 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-sm flex items-start gap-2 animate-in fade-in zoom-in-95 duration-200">
+              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
+              {success}
+            </div>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button
+            type="submit"
+            className="w-full group relative overflow-hidden"
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Send className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
             )}
-          </button>
-        ))}
-      </div>
-
-      <Button className="mt-6 w-full" disabled={!canSend} onClick={() => setSent(true)}>
-        {numericAmount > wallet.balance ? "Insufficient balance" : "Send money"}
-      </Button>
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between py-1.5 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground">{value}</span>
-    </div>
+            {isProcessing ? "Processing..." : "Confirm Send"}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
   )
 }

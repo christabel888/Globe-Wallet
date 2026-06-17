@@ -12,17 +12,16 @@ interface TransactionFilters {
 }
 
 export function useTransactions() {
-  const { fiat, asset } = useFinanceServices()
+  const { fiat, wallet } = useFinanceServices()
   const { withErrorBoundary, hasError, error } = useErrorBoundary()
-  
+
   const [loading, setLoading] = useState(false)
 
   const getTransactions = useCallback(async (filters?: TransactionFilters): Promise<Transaction[]> => {
     setLoading(true)
-    
+
     try {
-      // Simulate API call - in real app this would fetch from backend
-      let filtered = [...transactions]
+      let filtered = await wallet.getTransactionHistory()
 
       if (filters) {
         if (filters.type) {
@@ -34,7 +33,6 @@ export function useTransactions() {
         if (filters.currency) {
           filtered = filtered.filter(t => t.currency === filters.currency)
         }
-        // Date filtering would be implemented here
       }
 
       setLoading(false)
@@ -43,7 +41,7 @@ export function useTransactions() {
       setLoading(false)
       throw err
     }
-  }, [])
+  }, [wallet])
 
   const formatTransactionAmount = useCallback((transaction: Transaction): string => {
     return withErrorBoundary(
@@ -53,7 +51,7 @@ export function useTransactions() {
   }, [fiat, withErrorBoundary])
 
   const convertTransactionAmount = useCallback((
-    transaction: Transaction, 
+    transaction: Transaction,
     targetCurrency: CurrencyCode
   ): number => {
     return withErrorBoundary(
@@ -71,12 +69,12 @@ export function useTransactions() {
   }, [getTransactions])
 
   const calculateCategoryTotal = useCallback(async (
-    category: Transaction['category'], 
+    category: Transaction['category'],
     targetCurrency: CurrencyCode = 'USD'
   ): Promise<number> => {
     const categoryTransactions = await getTransactionsByCategory(category)
-    
-    return categoryTransactions.reduce((total, transaction) => {
+
+    return categoryTransactions.reduce((total: number, transaction: Transaction) => {
       const converted = convertTransactionAmount(transaction, targetCurrency)
       return total + (transaction.type === 'out' ? -converted : converted)
     }, 0)
