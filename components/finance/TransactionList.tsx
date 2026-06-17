@@ -1,0 +1,175 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Button } from '../ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { useTransactions } from '../../hooks/useTransactions'
+import { Transaction } from '../../lib/types'
+import { ArrowUpRight, ArrowDownLeft, Filter } from 'lucide-react'
+import { Skeleton } from '../ui/skeleton'
+
+interface TransactionListProps {
+  limit?: number
+  showFilters?: boolean
+  className?: string
+}
+
+export function TransactionList({ limit = 10, showFilters = true, className }: TransactionListProps) {
+  const { 
+    getTransactions, 
+    formatTransactionAmount, 
+    loading, 
+    hasError, 
+    error 
+  } = useTransactions()
+  
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [filter, setFilter] = useState<{ type?: 'in' | 'out'; category?: string }>({})
+
+  useEffect(() => {
+    const loadTransactions = async () => {
+      try {
+        const data = await getTransactions(filter)
+        setTransactions(data.slice(0, limit))
+      } catch (err) {
+        console.error('Failed to load transactions:', err)
+      }
+    }
+    loadTransactions()
+  }, [getTransactions, filter, limit])
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilter(prev => ({
+      ...prev,
+      [key]: value === 'all' ? undefined : value
+    }))
+  }
+
+  if (loading) {
+    return (
+      <Card className={className} data-testid="transaction-list-loading">
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center space-x-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="space-y-1 flex-1">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+              <Skeleton className="h-4 w-16" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (hasError) {
+    return (
+      <Card className={className} data-testid="transaction-list-error">
+        <CardContent className="pt-6">
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Failed to load transactions
+            </p>
+            <p className="text-xs text-destructive mt-1">{error?.message}</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className={className} data-testid="transaction-list">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle>Recent Transactions</CardTitle>
+        {showFilters && (
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <Select onValueChange={(value) => handleFilterChange('type', value)}>
+              <SelectTrigger className="w-24 h-8">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="in">Income</SelectItem>
+                <SelectItem value="out">Expense</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select onValueChange={(value) => handleFilterChange('category', value)}>
+              <SelectTrigger className="w-28 h-8">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="transfer">Transfer</SelectItem>
+                <SelectItem value="bills">Bills</SelectItem>
+                <SelectItem value="savings">Savings</SelectItem>
+                <SelectItem value="card">Card</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {transactions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No transactions found
+            </p>
+          ) : (
+            transactions.map((transaction) => (
+              <div 
+                key={transaction.id} 
+                className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"
+                data-testid={`transaction-${transaction.id}`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-full ${
+                    transaction.type === 'in' 
+                      ? 'bg-green-100 text-green-600' 
+                      : 'bg-red-100 text-red-600'
+                  }`}>
+                    {transaction.type === 'in' ? (
+                      <ArrowDownLeft className="w-4 h-4" />
+                    ) : (
+                      <ArrowUpRight className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">{transaction.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {transaction.detail} • {transaction.date}
+                    </div>
+                  </div>
+                </div>
+                <div className={`text-right ${
+                  transaction.type === 'in' ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  <div className="font-medium text-sm">
+                    {transaction.type === 'in' ? '+' : '-'}
+                    {formatTransactionAmount(transaction)}
+                  </div>
+                  <div className="text-xs text-muted-foreground capitalize">
+                    {transaction.category}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        {transactions.length > 0 && transactions.length === limit && (
+          <div className="mt-4 text-center">
+            <Button variant="outline" size="sm">
+              View All Transactions
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
