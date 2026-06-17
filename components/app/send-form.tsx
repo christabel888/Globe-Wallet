@@ -1,110 +1,139 @@
-"use client"
+'use client'
 
-import { useState, useMemo } from "react"
-import { Send, CheckCircle2, AlertCircle, Loader2, Coins } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useWallet, usePricing } from "@/hooks/useFinanceServices"
-import { useBalances } from "@/hooks/useBalances"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useMemo, useId } from 'react'
+import { Send, CheckCircle2, Loader2, Coins, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { WalletErrorAlert } from '@/components/ui/wallet-error-alert'
+import { usePricing } from '@/hooks/useFinanceServices'
+import { useBalances } from '@/hooks/useBalances'
+import { useWalletSend } from '@/hooks/useWalletSend'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { calculateFee } from '@/lib/helpers/format'
+import type { AssetCode } from '@/lib/types'
 
 export function SendForm() {
-  const { sendPayment, validateAddress, isProcessing } = useWallet()
+  const { send, isProcessing, status, error, result, reset } = useWalletSend()
   const { formatAsset } = usePricing()
   const { assets } = useBalances()
 
-  const [address, setAddress] = useState("")
-  const [amount, setAmount] = useState("")
-  const [selectedAsset, setSelectedAsset] = useState("XLM")
-  const [memo, setMemo] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [address, setAddress] = useState('')
+  const [amount, setAmount] = useState('')
+  const [selectedAsset, setSelectedAsset] = useState<AssetCode>('XLM')
+  const [memo, setMemo] = useState('')
 
-  const currentAssetBalance = useMemo(() => {
-    return assets.find(a => a.code === selectedAsset)?.balance || 0
-  }, [assets, selectedAsset])
+  // Unique IDs for aria associations
+  const addressId = useId()
+  const addressErrorId = useId()
+  const amountId = useId()
+  const memoId = useId()
+
+  const currentAssetBalance = useMemo(
+    () => assets.find((a) => a.code === selectedAsset)?.balance ?? 0,
+    [assets, selectedAsset],
+  )
+
+  const estimatedFee = useMemo(
+    () => calculateFee(parseFloat(amount) || 0),
+    [amount],
+  )
+
+  const hasAddressError = status === 'error' && error?.toLowerCase().includes('address')
+  const hasAmountError = status === 'error' && error?.toLowerCase().includes('amount')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setSuccess(null)
+    await send(address, amount, selectedAsset, memo || undefined)
+  }
 
-    if (!validateAddress(address)) {
-      setError("Invalid Stellar address")
-      return
-    }
-
-    const numAmount = parseFloat(amount)
-    if (isNaN(numAmount) || numAmount <= 0) {
-      setError("Please enter a valid amount")
-      return
-    }
-
-    if (numAmount > currentAssetBalance) {
-      setError(`Insufficient ${selectedAsset} balance`)
-      return
-    }
-
-    try {
-      const result = await sendPayment(address, numAmount, selectedAsset as any, memo)
-      if (result.status === "completed") {
-        setSuccess(`Successfully sent ${formatAsset(numAmount, selectedAsset as any)} to ${address.slice(0, 8)}...`)
-        setAddress("")
-        setAmount("")
-        setMemo("")
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to send payment")
-    }
+  const handleReset = () => {
+    setAddress('')
+    setAmount('')
+    setMemo('')
+    reset()
   }
 
   return (
-    <Card className="w-full max-w-md border-primary/20 shadow-2xl bg-card/50 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <Card
+      className="w-full max-w-md border-primary/20 shadow-2xl bg-card/50 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-500"
+      data-testid="send-form-card"
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Send className="w-5 h-5 text-primary" />
+          <Send className="w-5 h-5 text-primary" aria-hidden />
           Send Assets
         </CardTitle>
-        <CardDescription>Transfer Lumens or tokens securely to any Stellar address.</CardDescription>
+        <CardDescription>
+          Transfer Lumens or tokens securely to any Stellar address.
+        </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+
+      <form onSubmit={handleSubmit} aria-label="Send payment form" noValidate>
         <CardContent className="space-y-4">
+          {/* Recipient Address */}
           <div className="space-y-2">
-            <label htmlFor="address" className="text-sm font-medium">Recipient Address</label>
+            <label htmlFor={addressId} className="text-sm font-medium">
+              Recipient Address
+            </label>
             <Input
-              id="address"
+              id={addressId}
+              data-testid="address-input"
               placeholder="e.g. GDXSPAY..."
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               className="bg-background/50"
+              aria-invalid={hasAddressError || undefined}
+              aria-describedby={hasAddressError ? addressErrorId : undefined}
+              autoComplete="off"
+              spellCheck={false}
             />
           </div>
 
+          {/* Amount + Asset */}
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2 space-y-2">
-              <label htmlFor="amount" className="text-sm font-medium">Amount</label>
+              <label htmlFor={amountId} className="text-sm font-medium">
+                Amount
+              </label>
               <Input
-                id="amount"
+                id={amountId}
+                data-testid="amount-input"
                 type="number"
                 step="any"
+                min="0"
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="bg-background/50"
+                aria-invalid={hasAmountError || undefined}
+                aria-describedby={hasAmountError ? addressErrorId : undefined}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Asset</label>
-              <Select value={selectedAsset} onValueChange={setSelectedAsset}>
-                <SelectTrigger className="bg-background/50">
+              <label className="text-sm font-medium" id="asset-select-label">
+                Asset
+              </label>
+              <Select
+                value={selectedAsset}
+                onValueChange={(v) => setSelectedAsset(v as AssetCode)}
+              >
+                <SelectTrigger
+                  className="bg-background/50"
+                  aria-labelledby="asset-select-label"
+                  data-testid="asset-select"
+                >
                   <SelectValue placeholder="Asset" />
                 </SelectTrigger>
                 <SelectContent>
-                  {assets.map(asset => (
-                    <SelectItem key={asset.code} value={asset.code}>
+                  {assets.map((asset) => (
+                    <SelectItem
+                      key={asset.code}
+                      value={asset.code}
+                      data-testid={`asset-option-${asset.code}`}
+                    >
                       <div className="flex items-center gap-2">
-                        <Coins className="w-4 h-4 text-primary" />
+                        <Coins className="w-4 h-4 text-primary" aria-hidden />
                         {asset.code}
                       </div>
                     </SelectItem>
@@ -114,18 +143,35 @@ export function SendForm() {
             </div>
           </div>
 
-          <div className="flex justify-between items-center px-1">
-            <p className="text-xs text-muted-foreground italic">
-              Balance: {formatAsset(currentAssetBalance, selectedAsset as any)}
-            </p>
+          {/* Balance + Fee info */}
+          <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
+            <span>
+              Balance:{' '}
+              <span data-testid="current-balance">
+                {formatAsset(currentAssetBalance, selectedAsset)}
+              </span>
+            </span>
+            {parseFloat(amount) > 0 && (
+              <span data-testid="fee-estimate">
+                Est. fee: {estimatedFee.toFixed(6)} {selectedAsset}
+              </span>
+            )}
           </div>
 
+          {/* Memo */}
           <div className="space-y-2">
-            <label htmlFor="memo" className="text-sm font-medium text-muted-foreground flex items-center justify-between">
-              Memo <span className="text-[10px] uppercase font-bold opacity-50 px-1.5 py-0.5 bg-muted rounded">Optional</span>
+            <label
+              htmlFor={memoId}
+              className="text-sm font-medium text-muted-foreground flex items-center justify-between"
+            >
+              Memo{' '}
+              <span className="text-[10px] uppercase font-bold opacity-50 px-1.5 py-0.5 bg-muted rounded">
+                Optional
+              </span>
             </label>
             <Input
-              id="memo"
+              id={memoId}
+              data-testid="memo-input"
               placeholder="Transaction note"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
@@ -133,33 +179,80 @@ export function SendForm() {
             />
           </div>
 
-          {error && (
-            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-start gap-2 animate-in fade-in zoom-in-95 duration-200">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-              {error}
-            </div>
+          {/* Error state */}
+          {status === 'error' && error && (
+            <WalletErrorAlert
+              id={addressErrorId}
+              message={error}
+              data-testid="send-error"
+              onRetry={handleReset}
+            />
           )}
 
-          {success && (
-            <div className="p-3 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-sm flex items-start gap-2 animate-in fade-in zoom-in-95 duration-200">
-              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
-              {success}
+          {/* Success state */}
+          {status === 'success' && result && (
+            <div
+              role="status"
+              aria-live="polite"
+              data-testid="send-success"
+              className="p-3 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-sm flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-200"
+            >
+              <span className="flex items-center gap-2 font-semibold">
+                <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden />
+                Transaction Successful
+              </span>
+              {result.hash && (
+                <span className="text-xs opacity-80 font-mono break-all">
+                  Hash: {result.hash.slice(0, 20)}…
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleReset}
+                className="mt-1 text-xs underline self-start"
+                data-testid="send-again-btn"
+              >
+                Send another
+              </button>
             </div>
           )}
         </CardContent>
-        <CardFooter>
+
+        <CardFooter className="flex gap-2">
           <Button
             type="submit"
-            className="w-full group relative overflow-hidden"
-            disabled={isProcessing}
+            className="flex-1 group relative overflow-hidden"
+            disabled={isProcessing || status === 'success'}
+            data-testid="send-submit-btn"
+            aria-busy={isProcessing}
           >
             {isProcessing ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" aria-hidden />
+                Processing…
+              </>
             ) : (
-              <Send className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
+              <>
+                <Send
+                  className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform"
+                  aria-hidden
+                />
+                Confirm Send
+              </>
             )}
-            {isProcessing ? "Processing..." : "Confirm Send"}
           </Button>
+          {status !== 'idle' && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleReset}
+              aria-label="Reset form"
+              data-testid="reset-btn"
+            >
+              <RefreshCw className="w-4 h-4" aria-hidden />
+            </Button>
+          )}
         </CardFooter>
       </form>
     </Card>
