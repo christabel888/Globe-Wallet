@@ -17,6 +17,7 @@ export function SendForm() {
   const { send, isProcessing, status, error, result, reset } = useWalletSend()
   const { formatAsset } = usePricing()
   const { assets } = useBalances()
+  const contactsState = useContacts()
 
   const [address, setAddress] = useState('')
   const [amount, setAmount] = useState('')
@@ -42,7 +43,12 @@ export function SendForm() {
   const hasAddressError = status === 'error' && error?.toLowerCase().includes('address')
   const hasAmountError = status === 'error' && error?.toLowerCase().includes('amount')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const currentAssetBalance = useMemo(
+    () => assets.find(a => a.code === selectedAsset)?.balance ?? 0,
+    [assets, selectedAsset]
+  )
+
+  const handleReview = (e: React.FormEvent) => {
     e.preventDefault()
     await send(address, amount, selectedAsset, memo || undefined)
   }
@@ -141,7 +147,6 @@ export function SendForm() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
           {/* Balance + Fee info */}
           <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
