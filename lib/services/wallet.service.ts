@@ -1,32 +1,68 @@
 import { IWalletService, StellarAccount, Balance, Transaction, TransactionResult, AssetCode, StellarServiceError } from '../types'
-import { stellarAccount, transactions, cryptoAssets, shortenKey } from '../finance-data'
+import { stellarAccount, cryptoAssets, shortenKey } from '../finance-data'
+import { BaseService } from './base.service'
+import { db } from '../db/mock-db'
 
-export class WalletService implements IWalletService {
+/**
+ * Level 2 Architecture Sync: Wallet Service
+ * Implements simulated Stellar account operations with persistence.
+ */
+export class WalletService extends BaseService implements IWalletService {
+    constructor() {
+        super('WalletService')
+    }
+
     getAccountInfo(): StellarAccount {
-        return { ...stellarAccount }
+        return {
+            publicKey: stellarAccount.publicKey,
+            name: 'Primary Wallet',
+            isFunded: true
+        }
     }
 
     async getBalance(): Promise<Balance[]> {
-        // In production, fetch from Horizon
-        return cryptoAssets.map(asset => ({
-            asset: asset.code,
-            amount: asset.balance,
-            priceUsd: asset.priceUsd
-        }))
+        return this.withPerformanceTracking('getBalance', async () => {
+            return cryptoAssets.map(asset => ({
+                asset: asset.code as AssetCode,
+                amount: asset.balance,
+                priceUsd: asset.priceUsd
+            }))
+        })
     }
 
     async sendPayment(destination: string, amount: number, asset: AssetCode, memo?: string): Promise<TransactionResult> {
-        if (!this.validateAddress(destination)) {
-            throw new StellarServiceError("Invalid destination address")
-        }
+        return this.withPerformanceTracking('sendPayment', async () => {
+            try {
+                if (!this.validateAddress(destination)) {
+                    throw new StellarServiceError("Invalid destination address")
+                }
 
-        // Simulate Stellar transaction
-        console.log(`Sending ${amount} ${asset} to ${destination} with memo: ${memo}`)
+                // Simulate Stellar transaction propagation
+                await new Promise(r => setTimeout(r, 1000))
 
-        return {
-            success: true,
-            hash: "0x" + Math.random().toString(16).slice(2, 66)
-        }
+                const hash = "0x" + Math.random().toString(16).slice(2, 66)
+
+                // Persistence (Level 2 Sync)
+                await db.saveTransaction({
+                    id: Math.floor(Math.random() * 1000000).toString(),
+                    type: 'send',
+                    amount,
+                    asset,
+                    address: destination,
+                    date: 'Just now',
+                    status: 'completed',
+                    stellarHash: hash
+                })
+
+                return {
+                    success: true,
+                    hash,
+                    status: 'completed'
+                }
+            } catch (err) {
+                this.handleError(err, 'sendPayment')
+            }
+        })
     }
 
     generateReceiveAddress(): string {
@@ -43,8 +79,7 @@ export class WalletService implements IWalletService {
     }
 
     async getTransactionHistory(): Promise<Transaction[]> {
-        // Cast to Transaction[] to ensure compatibility with status/stellarHash
-        return [...transactions] as Transaction[]
+        return db.getTransactions()
     }
 
     shortenKey(key: string, lead = 6, tail = 6): string {

@@ -1,85 +1,105 @@
-export type CurrencyCode = "NGN" | "USD" | "GBP"
-export type AssetCode = "XLM" | "USDC" | "USDT"
+/**
+ * Level 2 Architecture Sync: Enterprise Interfaces
+ * Consolidated and synced with architecture.md and issue-27.md
+ */
 
-// Base interfaces from existing finance-data.ts
-export interface Wallet {
-  code: CurrencyCode
-  label: string
-  symbol: string
-  balance: number
-  changePct: number
+export type AssetCode = 'XLM' | 'USDC' | 'USDT' | 'NGN' | 'USD' | 'EUR'
+export type CurrencyCode = 'NGN' | 'USD' | 'EUR' | 'GBP'
+
+export interface StellarAccount {
+  publicKey: string
+  name: string
+  isFunded: boolean
 }
 
-export interface Transaction {
+export interface Wallet {
   id: string
   name: string
-  detail: string
-  amount: number
-  currency: CurrencyCode
-  type: "in" | "out"
-  category: "transfer" | "airtime" | "bills" | "savings" | "card" | "deposit"
-  date: string
-  status?: "pending" | "completed" | "failed"
-  stellarHash?: string
-}
-
-export interface Balance {
-  asset: AssetCode | CurrencyCode
-  amount: number
-  priceUsd?: number
+  code: CurrencyCode
+  balance: number
+  color: string
 }
 
 export interface CryptoAsset {
   code: AssetCode
   name: string
-  issuer: string
   balance: number
   priceUsd: number
-  changePct: number
+  change24h: number
   color: string
 }
 
-export interface StellarAccount {
-  publicKey: string
-  memo: string
-  network: string
+export interface Contact {
+  id: string
+  name: string
+  handle: string
+  initials: string
 }
 
-export interface OffRampMethod {
+export interface SavingsGoal {
   id: string
-  type: "bank" | "mobile"
+  title: string
+  saved: number
+  target: number
+  currency: CurrencyCode
+  apy: number
+  color: string
+}
+
+export interface PaymentCard {
+  id: string
   label: string
-  detail: string
-  initials: string
+  type: "virtual" | "physical"
+  brand: "Visa" | "Mastercard"
+  last4: string
+  expiry: string
+  balance: number
+  currency: CurrencyCode
+  frozen: boolean
+  gradient: string
+}
+
+export interface Balance {
+  asset: AssetCode
+  amount: number
+  priceUsd: number
+}
+
+export interface Transaction {
+  id: string
+  type: 'send' | 'receive' | 'convert' | 'withdraw'
+  amount: number
+  asset: AssetCode
+  address: string
+  date: string
+  status: 'completed' | 'pending' | 'failed'
+  stellarHash?: string
+}
+
+export interface SwapEstimate {
+  from: AssetCode
+  to: AssetCode
+  fromAmount: number
+  toAmount: number
+  path: AssetCode[]
+  priceImpact: number
 }
 
 export interface TransactionResult {
   success: boolean
   hash?: string
   error?: string
+  status?: 'completed' | 'pending' | 'failed'
 }
 
-export interface SwapEstimate {
-  fromAsset: AssetCode
-  toAsset: AssetCode
-  fromAmount: number
-  toAmount: number
-  rate: number
-  fee: number
+export class StellarServiceError extends Error {
+  constructor(message: string, public readonly code?: string) {
+    super(message)
+    this.name = 'StellarServiceError'
+  }
 }
 
-export interface WithdrawalOrder {
-  id: string
-  amount: number
-  asset: AssetCode
-  payoutAmount: number
-  payoutCurrency: CurrencyCode
-  status: "pending" | "processing" | "completed" | "failed"
-  methodId: string
-  createdAt: string
-}
-
-// Service interfaces
+// Service Interfaces
 export interface IWalletService {
   getAccountInfo(): StellarAccount
   getBalance(): Promise<Balance[]>
@@ -90,64 +110,37 @@ export interface IWalletService {
   shortenKey(key: string, lead?: number, tail?: number): string
 }
 
+export interface IPricingService {
+  getAssets(): any[]
+  getPrice(code: AssetCode): Promise<number>
+  formatAsset(amount: number, code: AssetCode, hidden?: boolean): string
+}
+
 export interface IExchangeService {
-  getCurrentRates(): Promise<Record<AssetCode, number>>
   estimateSwap(from: AssetCode, to: AssetCode, amount: number): Promise<SwapEstimate>
   executeSwap(from: AssetCode, to: AssetCode, amount: number): Promise<TransactionResult>
 }
 
 export interface IOffRampService {
-  getMethods(): OffRampMethod[]
-  initiateWithdrawal(amount: number, asset: AssetCode, methodId: string, targetCurrency: CurrencyCode): Promise<WithdrawalOrder>
-  getWithdrawalStatus(orderId: string): Promise<WithdrawalOrder>
-  getRates(): Record<CurrencyCode, number>
+  initiateWithdrawal(amount: number, asset: AssetCode, methodId: string, currency: CurrencyCode): Promise<TransactionResult>
+  getRates(): Promise<Record<string, number>>
 }
 
-export interface IPricingService {
-  getAssetPrice(code: AssetCode): Promise<number>
-  getAssets(): CryptoAsset[]
-  formatAsset(amount: number, code: AssetCode, hidden?: boolean): string
+export interface ISorobanService {
+  createSavingsGoal(amount: number, asset: AssetCode, deadline: number): Promise<TransactionResult>
+  stakeAssets(amount: number, asset: AssetCode): Promise<TransactionResult>
 }
 
 export interface IFiatService {
-  getWallets(): Wallet[]
-  formatMoney(amount: number, currency: CurrencyCode, hidden?: boolean): string
-  convertCurrency(from: CurrencyCode, to: CurrencyCode, amount: number): number
+  getAccountBalance(): number
 }
 
+// Container Interface
 export interface IFinanceServiceContainer {
   wallet: IWalletService
+  pricing: IPricingService
   exchange: IExchangeService
   offRamp: IOffRampService
-  pricing: IPricingService
   fiat: IFiatService
-}
-
-// Error types
-export abstract class ServiceError extends Error {
-  abstract readonly code: string
-  abstract readonly severity: 'low' | 'medium' | 'high'
-  readonly context?: Record<string, unknown>
-  readonly timestamp: Date = new Date()
-
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message)
-    this.name = this.constructor.name
-    this.context = context
-  }
-}
-
-export class AssetServiceError extends ServiceError {
-  readonly code = 'ASSET_ERROR'
-  readonly severity = 'medium' as const
-}
-
-export class FiatServiceError extends ServiceError {
-  readonly code = 'FIAT_ERROR'
-  readonly severity = 'medium' as const
-}
-
-export class StellarServiceError extends ServiceError {
-  readonly code = 'STELLAR_ERROR'
-  readonly severity = 'high' as const
+  soroban: ISorobanService
 }

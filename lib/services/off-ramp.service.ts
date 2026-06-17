@@ -1,38 +1,37 @@
-import { IOffRampService, AssetCode, CurrencyCode, OffRampMethod, WithdrawalOrder, StellarServiceError } from '../types'
-import { offRampMethods, offRampRates } from '../finance-data'
+import { IOffRampService, AssetCode, CurrencyCode, TransactionResult } from '../types'
+import { BaseService } from './base.service'
 
-export class OffRampService implements IOffRampService {
-    getMethods(): OffRampMethod[] {
-        return [...offRampMethods]
+/**
+ * Level 2 Architecture Sync: Off-Ramp Service
+ * Implements simulated anchor withdrawal as defined in architecture.md
+ */
+export class OffRampService extends BaseService implements IOffRampService {
+    constructor() {
+        super('OffRampService')
     }
 
-    async initiateWithdrawal(amount: number, asset: AssetCode, methodId: string, targetCurrency: CurrencyCode): Promise<WithdrawalOrder> {
-        const rate = offRampRates[targetCurrency]
-        if (!rate) {
-            throw new StellarServiceError(`Off-ramp rate not available for ${targetCurrency}`)
-        }
+    async initiateWithdrawal(amount: number, asset: AssetCode, methodId: string, currency: CurrencyCode): Promise<TransactionResult> {
+        return this.withPerformanceTracking('initiateWithdrawal', async () => {
+            try {
+                // Simulate off-ramp anchor interaction (SEP-24/SEP-6)
+                await new Promise(r => setTimeout(r, 1500))
 
-        // Assume 1 unit of asset (e.g. USDC) = 1 USD
-        const payoutAmount = amount * rate
+                return {
+                    success: true,
+                    hash: 'offramp_' + Math.random().toString(16).slice(2),
+                    status: 'pending'
+                }
+            } catch (err) {
+                this.handleError(err, 'initiateWithdrawal')
+            }
+        })
+    }
 
+    async getRates(): Promise<Record<string, number>> {
         return {
-            id: "w-" + Math.random().toString(36).slice(2, 9),
-            amount: amount,
-            asset: asset,
-            payoutAmount: payoutAmount,
-            payoutCurrency: targetCurrency,
-            status: "pending",
-            methodId: methodId,
-            createdAt: new Date().toISOString()
+            'USD': 1.0,
+            'NGN': 1500.0,
+            'EUR': 0.92
         }
-    }
-
-    async getWithdrawalStatus(orderId: string): Promise<WithdrawalOrder> {
-        // In production, fetch from database
-        throw new Error("Not implemented")
-    }
-
-    getRates(): Record<CurrencyCode, number> {
-        return { ...offRampRates }
     }
 }

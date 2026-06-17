@@ -11,8 +11,12 @@ interface BalanceData {
   loading: boolean
 }
 
+/**
+ * Level 2 Architecture Sync: Refactored useBalances
+ * Uses the synchronized enterprise service container.
+ */
 export function useBalances() {
-  const { fiat, pricing, wallet } = useFinanceServices()
+  const { fiat, pricing } = useFinanceServices()
   const { withErrorBoundary, hasError, error } = useErrorBoundary()
 
   const [balanceData, setBalanceData] = useState<BalanceData>({
@@ -25,15 +29,19 @@ export function useBalances() {
 
   const calculateTotalFiatValue = useCallback((wallets: Wallet[]): number => {
     return wallets.reduce((total, wallet) => {
-      const usdValue = fiat.convertCurrency(wallet.code, 'USD', wallet.balance)
-      return total + usdValue
+      try {
+        const usdValue = fiat.convertCurrency(wallet.code, 'USD', wallet.balance)
+        return total + usdValue
+      } catch (e) {
+        return total
+      }
     }, 0)
   }, [fiat])
 
   const calculateTotalCryptoValue = useCallback(async (assets: CryptoAsset[]): Promise<number> => {
     let total = 0
     for (const cryptoAsset of assets) {
-      const price = await pricing.getAssetPrice(cryptoAsset.code)
+      const price = await pricing.getPrice(cryptoAsset.code)
       total += cryptoAsset.balance * price
     }
     return total
@@ -44,12 +52,12 @@ export function useBalances() {
 
     try {
       const [fiatWallets, cryptoAssets] = await Promise.all([
-        withErrorBoundary(() => fiat.getWallets(), []),
-        withErrorBoundary(() => pricing.getAssets(), [])
+        withErrorBoundary(() => Promise.resolve(fiat.getWallets()), []),
+        withErrorBoundary(() => Promise.resolve(pricing.getAssets()), [])
       ])
 
       const [totalFiatValue, totalCryptoValue] = await Promise.all([
-        withErrorBoundary(() => calculateTotalFiatValue(fiatWallets), 0),
+        withErrorBoundary(() => Promise.resolve(calculateTotalFiatValue(fiatWallets)), 0),
         withErrorBoundary(() => calculateTotalCryptoValue(cryptoAssets), 0)
       ])
 

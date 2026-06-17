@@ -1,4 +1,4 @@
-import { useContext, createContext, ReactNode } from 'react'
+import { useContext, createContext, ReactNode, createElement } from 'react'
 import { IFinanceServiceContainer, AssetCode, CurrencyCode } from '../lib/types'
 import { financeServices } from '../lib/services/container'
 
@@ -10,11 +10,7 @@ interface FinanceServicesProviderProps {
 }
 
 export function FinanceServicesProvider({ children, services = financeServices }: FinanceServicesProviderProps) {
-  return (
-    <FinanceServicesContext.Provider value= { services } >
-    { children }
-    </FinanceServicesContext.Provider>
-  )
+  return createElement(FinanceServicesContext.Provider, { value: services }, children)
 }
 
 export function useFinanceServices(): IFinanceServiceContainer {
@@ -25,17 +21,8 @@ export function usePricing() {
   const { pricing } = useFinanceServices()
   return {
     getAssets: () => pricing.getAssets(),
-    getPrice: (code: AssetCode) => pricing.getAssetPrice(code) as Promise<number>,
-    format: (amount: number, code: AssetCode, hidden?: boolean) => pricing.formatAsset(amount, code, hidden)
-  }
-}
-
-export function useWallets() {
-  const { fiat } = useFinanceServices()
-  return {
-    getWallets: () => fiat.getWallets(),
-    formatMoney: (amount: number, currency: CurrencyCode, hidden?: boolean) => fiat.formatMoney(amount, currency, hidden),
-    convert: (from: CurrencyCode, to: CurrencyCode, amount: number) => fiat.convertCurrency(from, to, amount)
+    getPrice: (code: AssetCode) => pricing.getPrice(code),
+    formatAsset: (amount: number, code: AssetCode, hidden?: boolean) => pricing.formatAsset(amount, code, hidden)
   }
 }
 
@@ -55,7 +42,6 @@ export function useWallet() {
 export function useExchange() {
   const { exchange } = useFinanceServices()
   return {
-    getRates: () => exchange.getCurrentRates(),
     estimate: (from: AssetCode, to: AssetCode, amt: number) => exchange.estimateSwap(from, to, amt),
     execute: (from: AssetCode, to: AssetCode, amt: number) => exchange.executeSwap(from, to, amt)
   }
@@ -64,8 +50,15 @@ export function useExchange() {
 export function useOffRamp() {
   const { offRamp } = useFinanceServices()
   return {
-    getMethods: () => offRamp.getMethods(),
     initiate: (amt: number, asset: AssetCode, mid: string, cur: CurrencyCode) => offRamp.initiateWithdrawal(amt, asset, mid, cur),
     getRates: () => offRamp.getRates()
+  }
+}
+
+export function useSoroban() {
+  const { soroban } = useFinanceServices()
+  return {
+    createGoal: (amt: number, asset: AssetCode, deadline: number) => soroban.createSavingsGoal(amt, asset, deadline),
+    stake: (amt: number, asset: AssetCode) => soroban.stakeAssets(amt, asset)
   }
 }
