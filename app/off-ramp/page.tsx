@@ -327,17 +327,26 @@ export default function OffRampPage() {
                 <Label>Payment method</Label>
                 <div className="space-y-3">
                   {paymentMethods.map((method) => (
-                    <div
+                    <label
                       key={method.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      className={`p-4 border rounded-lg cursor-pointer transition-all block ${
                         paymentMethod === method.id
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-primary/50"
                       } ${!method.enabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                      onClick={() =>
-                        method.enabled && setPaymentMethod(method.id)
-                      }
                     >
+                      <input
+                        type="radio"
+                        name="payment-method"
+                        value={method.id}
+                        checked={paymentMethod === method.id}
+                        onChange={() =>
+                          method.enabled && persistSelectedMethod(method.id)
+                        }
+                        disabled={!method.enabled}
+                        className="sr-only"
+                        aria-label={`Select ${method.name} - ${method.details}`}
+                      />
                       <div className="flex items-start gap-3">
                         <div className="mt-1">
                           {method.type === "bank" ? (
@@ -371,7 +380,7 @@ export default function OffRampPage() {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </label>
                   ))}
                 </div>
               </div>
