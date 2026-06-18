@@ -16,6 +16,12 @@ const customJestConfig = {
     '!**/*.d.ts',
   ],
   coverageThreshold: {
+    'lib/fixtures/factory.ts': {
+      branches: 80,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
     'lib/transaction-utils.ts': {
       branches: 60,
       functions: 85,
@@ -45,6 +51,42 @@ const customJestConfig = {
       functions: 75,
       lines: 75,
       statements: 75,
+    },
+    'app/api/wallet/balances/route.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+    'app/api/wallet/transactions/route.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+    'app/api/wallet/send/route.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+    'app/api/rates/route.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+    'lib/services/asset.service.ts': {
+      branches: 85,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    'lib/helpers/conversion-math.ts': {
+      branches: 90,
+      functions: 100,
+      lines: 95,
+      statements: 95,
     },
   },
 }
