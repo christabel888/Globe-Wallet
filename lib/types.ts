@@ -5,6 +5,8 @@
 
 export type AssetCode = 'XLM' | 'USDC' | 'USDT' | 'NGN' | 'USD' | 'EUR'
 export type CurrencyCode = 'NGN' | 'USD' | 'EUR' | 'GBP'
+export type TransactionCategory = 'transfer' | 'airtime' | 'bills' | 'savings' | 'card' | 'deposit'
+export type TransactionDirection = 'in' | 'out'
 
 export type TransactionCategory = 'payment' | 'exchange' | 'withdrawal' | 'deposit' | 'transfer' | 'airtime' | 'bills' | 'savings' | 'card'
 
@@ -20,6 +22,8 @@ export interface StellarAccount {
 export interface Wallet {
   id: string
   name: string
+  /** Display label; defaults to `name` in UI helpers */
+  label?: string
   code: CurrencyCode
   balance: number
   color: string
@@ -35,6 +39,8 @@ export interface CryptoAsset {
   balance: number
   priceUsd: number
   change24h: number
+  /** UI alias for 24h change percentage */
+  changePct?: number
   color: string
   /** Percentage change, alias for compatibility with older components */
   changePct?: number
@@ -257,6 +263,21 @@ export interface IFiatService {
   formatMoney(amount: number, currency: CurrencyCode, hidden?: boolean): string
   convertCurrency(from: CurrencyCode, to: CurrencyCode, amount: number): number
   getAccountBalance(): number
+  getWallets(): Wallet[]
+  formatMoney(amount: number, currency: CurrencyCode, hidden?: boolean): string
+  convertCurrency(from: CurrencyCode, to: CurrencyCode, amount: number): number
+}
+
+export interface MergeAnalyticsPayload {
+  event: 'merge'
+  repository: string
+  branch: string
+  commit: string
+  timestamp: string
+  author: string
+  issue: number
+  status: 'success' | 'failure'
+  coverage_verified: boolean
 }
 
 export interface IAssetService {

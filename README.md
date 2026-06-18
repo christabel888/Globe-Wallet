@@ -129,6 +129,28 @@ STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
 
 ## Testing
 
+### Testing strategy
+
+Globe Wallet targets **>90% coverage** on business logic in `lib/`, `hooks/`, and `components/` (see `jest.config.js`). Full details, API contracts, and the QA checklist live in [docs/issue-30.md](docs/issue-30.md).
+
+| Command | Purpose |
+|---------|---------|
+| `npm test` | Full Jest suite (unit, component, integration, property) |
+| `npm run test:unit` | Service and utility unit tests |
+| `npm run test:component` | React Testing Library component tests |
+| `npm run test:integration` | API routes and service integration |
+| `npm run test:coverage` | Coverage report with 90% global threshold |
+| `npm run test:e2e` | Playwright end-to-end tests |
+| `npm run lint` | ESLint |
+| `npm run build` | Production build verification |
+
+**E2E highlights**
+
+- Send flow (issue #23): `npm run test:e2e -- --grep "Send Flow"`
+- Dashboard integration (issue #30): `npm run test:e2e -- --grep "Issue #30"`
+
+CI runs lint, build, all Jest layers, Playwright, and coverage on every push/PR to `main`. Successful merges to `main` POST merge analytics to `MERGE_ANALYTICS_URL` (repository secret).
+
 ### Browser Testing
 All wallet flows are verified in supported browsers:
 - Chrome/Chromium 90+
