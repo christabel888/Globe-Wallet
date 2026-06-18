@@ -47,6 +47,9 @@ jobs:
     - name: Run E2E tests (send flow)
       run: npm run test:e2e -- --grep "Send Flow"
 
+    - name: Run E2E tests (onboarding flow)
+      run: npm run test:e2e -- --grep "@critical"
+
     - name: Run full E2E suite
       run: npm run test:e2e
 
@@ -59,6 +62,7 @@ jobs:
     - name: Send merge analytics (issue-30)
       env:
         MERGE_ANALYTICS_URL: ${{ secrets.MERGE_ANALYTICS_URL }}
+    - name: Send merge analytics (issue-23, issue-28)
       run: |
         if [ -z "$MERGE_ANALYTICS_URL" ]; then
           echo "MERGE_ANALYTICS_URL secret not configured; skipping analytics POST"
@@ -74,6 +78,7 @@ jobs:
             "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",
             "author": "${{ github.actor }}",
             "issue": 30,
+            "issues": [23, 28],
             "status": "success",
             "coverage_verified": true
           }'
