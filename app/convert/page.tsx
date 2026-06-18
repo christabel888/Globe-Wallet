@@ -10,51 +10,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, ArrowUpDown, TrendingUp, Info } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
-
-interface ExchangeRate {
-  from: string
-  to: string
-  rate: number
-  change24h: number
-}
+import { useAssets } from "@/hooks/useFinanceServices"
+import { MOCK_CONVERSION_RATES } from "@/lib/fixtures"
+import type { AssetCode } from "@/lib/types"
 
 export default function ConvertPage() {
+  const { getAssets, convert } = useAssets()
   const [fromAmount, setFromAmount] = useState("")
   const [toAmount, setToAmount] = useState("")
-  const [fromCurrency, setFromCurrency] = useState("XLM")
-  const [toCurrency, setToCurrency] = useState("USDC")
+  const [fromCurrency, setFromCurrency] = useState<AssetCode>("XLM")
+  const [toCurrency, setToCurrency] = useState<AssetCode>("USDC")
   const [isLoading, setIsLoading] = useState(false)
-  
-  // Mock exchange rates - in real app this would come from API
-  const [rates] = useState<ExchangeRate[]>([
-    { from: "XLM", to: "USDC", rate: 0.095, change24h: 2.4 },
-    { from: "XLM", to: "USDT", rate: 0.094, change24h: 1.8 },
-    { from: "USDC", to: "XLM", rate: 10.53, change24h: -2.3 },
-    { from: "USDT", to: "XLM", rate: 10.64, change24h: -1.7 },
-  ])
-  
-  // Mock balances - in real app this would come from wallet
-  const balances = {
-    XLM: 1250.45,
-    USDC: 89.32,
-    USDT: 156.78
-  }
+
+  const assets = getAssets()
+  const balances: Record<string, number> = Object.fromEntries(
+    assets.map(asset => [asset.code, asset.balance])
+  )
   
   const getCurrentRate = () => {
-    return rates.find(r => r.from === fromCurrency && r.to === toCurrency)
+    const rate = MOCK_CONVERSION_RATES[fromCurrency]?.[toCurrency]
+    if (!rate) return null
+    return { from: fromCurrency, to: toCurrency, rate, change24h: 0 }
   }
-  
+
   const calculateConversion = (amount: string, isFromAmount: boolean) => {
-    const rate = getCurrentRate()
+    const rate = MOCK_CONVERSION_RATES[fromCurrency]?.[toCurrency]
     if (!rate || !amount) return ""
-    
+
     const numAmount = parseFloat(amount)
     if (isNaN(numAmount)) return ""
-    
+
     if (isFromAmount) {
-      return (numAmount * rate.rate).toFixed(6)
+      return (numAmount * rate).toFixed(6)
     } else {
-      return (numAmount / rate.rate).toFixed(6)
+      return (numAmount / rate).toFixed(6)
     }
   }
   
@@ -88,22 +77,26 @@ export default function ConvertPage() {
       toast.error("Please enter a valid amount")
       return
     }
-    
-    const balance = balances[fromCurrency as keyof typeof balances]
-    if (parseFloat(fromAmount) > balance) {
+
+    const balance = balances[fromCurrency]
+    if (balance === undefined || parseFloat(fromAmount) > balance) {
       toast.error(`Insufficient ${fromCurrency} balance`)
       return
     }
-    
+
     setIsLoading(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    toast.success(`Successfully converted ${fromAmount} ${fromCurrency} to ${toAmount} ${toCurrency}`)
-    setFromAmount("")
-    setToAmount("")
-    setIsLoading(false)
+
+    try {
+      const convertedAmount = convert(fromCurrency, toCurrency, parseFloat(fromAmount))
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      toast.success(`Successfully converted ${fromAmount} ${fromCurrency} to ${convertedAmount.toFixed(6)} ${toCurrency}`)
+      setFromAmount("")
+      setToAmount("")
+    } catch (error) {
+      toast.error("Conversion failed")
+    } finally {
+      setIsLoading(false)
+    }
   }
   
   const currentRate = getCurrentRate()
@@ -150,7 +143,7 @@ export default function ConvertPage() {
               <div className="flex items-center justify-between">
                 <Label>From</Label>
                 <span className="text-xs text-muted-foreground">
-                  Balance: {balances[fromCurrency as keyof typeof balances]?.toFixed(2)} {fromCurrency}
+                  Balance: {balances[fromCurrency]?.toFixed(2)} {fromCurrency}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -162,7 +155,7 @@ export default function ConvertPage() {
                     onChange={(e) => handleFromAmountChange(e.target.value)}
                   />
                 </div>
-                <Select value={fromCurrency} onValueChange={setFromCurrency}>
+                <Select value={fromCurrency} onValueChange={(val: string) => setFromCurrency(val as AssetCode)}>
                   <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
@@ -173,12 +166,12 @@ export default function ConvertPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {fromAmount && (
+              {fromAmount && balances[fromCurrency] && (
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-xs h-6 p-1"
-                  onClick={() => handleFromAmountChange(balances[fromCurrency as keyof typeof balances].toString())}
+                  onClick={() => handleFromAmountChange(balances[fromCurrency].toString())}
                 >
                   Use max
                 </Button>
@@ -202,7 +195,7 @@ export default function ConvertPage() {
               <div className="flex items-center justify-between">
                 <Label>To</Label>
                 <span className="text-xs text-muted-foreground">
-                  Balance: {balances[toCurrency as keyof typeof balances]?.toFixed(2)} {toCurrency}
+                  Balance: {balances[toCurrency]?.toFixed(2)} {toCurrency}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -214,7 +207,7 @@ export default function ConvertPage() {
                     onChange={(e) => handleToAmountChange(e.target.value)}
                   />
                 </div>
-                <Select value={toCurrency} onValueChange={setToCurrency}>
+                <Select value={toCurrency} onValueChange={(val: string) => setToCurrency(val as AssetCode)}>
                   <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
