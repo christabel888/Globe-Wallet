@@ -14,7 +14,6 @@ import { ratesService, type ExchangeRate } from "@/lib/services/rates.service"
 import type { AssetCode } from "@/lib/types"
 
 export default function ConvertPage() {
-  const { getAssets, convert } = useAssets()
   const [fromAmount, setFromAmount] = useState("")
   const [toAmount, setToAmount] = useState("")
   const [fromCurrency, setFromCurrency] = useState<AssetCode>("XLM")
@@ -60,7 +59,7 @@ export default function ConvertPage() {
   }
 
   const calculateConversion = (amount: string, isFromAmount: boolean) => {
-    const rate = MOCK_CONVERSION_RATES[fromCurrency]?.[toCurrency]
+    const rate = getCurrentRate()?.rate
     if (!rate || !amount) return ""
 
     const numAmount = parseFloat(amount)
