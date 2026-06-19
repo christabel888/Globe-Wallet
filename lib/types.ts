@@ -79,6 +79,52 @@ export interface SendResponse {
   error?: string
 }
 
+/** Payment request fields for receive / QR generation */
+export interface PaymentRequest {
+  address: string
+  amount?: string
+  memo?: string
+  asset?: AssetCode
+}
+
+/** QR payload for address-only or payment-request tabs */
+export interface ReceiveQRData {
+  value: string
+  type: 'address' | 'payment-request'
+  address: string
+  amount?: string
+  memo?: string
+}
+
+/** Response from GET /api/receive */
+export interface ReceiveAddressResponse {
+  success: boolean
+  address?: string
+  error?: string
+}
+
+/** Request body for POST /api/receive (payment request) */
+export interface PaymentRequestPayload {
+  amount?: string
+  memo?: string
+  asset?: AssetCode
+}
+
+/** Response from POST /api/receive */
+export interface PaymentRequestResponse {
+  success: boolean
+  address?: string
+  qrValue?: string
+  shareText?: string
+  error?: string
+}
+
+/** Result of client-side payment amount validation */
+export interface PaymentAmountValidation {
+  valid: boolean
+  error?: string
+}
+
 export interface SavingsGoal {
   id: string
   title: string

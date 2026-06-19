@@ -40,6 +40,7 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 - [Architecture Overview](docs/architecture.md) - Deep dive into the service-oriented architecture.
 - [Enterprise Upgrade (Issue #27)](docs/issue-27.md) - Details on the v1.2.0 upgrade, including API contracts and design rationale.
 - [Send Form: Contact Selection & Confirmation (Issue #23)](docs/issue-23.md) - Two-step send flow, contact picker, API contracts, and test instructions.
+- [Receive Page: QR Generation & Payment Requests (Issue #22)](docs/issue-22.md) - Service-integrated receive flow, SEP-0007 payment URIs, API contracts, and test matrix.
 - [Dashboard Integration & Testing Strategy (Issue #30)](docs/issue-30.md) - Service-layer home dashboard wiring, `/api/transactions`, test matrix, and CI coverage goals.
 
 [Continue working on v0 →](https://v0.app/chat/projects/prj_Z6moUc7brx5QzV1vPHQC842r9sYK)
@@ -146,6 +147,7 @@ Globe Wallet targets **>90% coverage** on business logic in `lib/`, `hooks/`, an
 **E2E highlights**
 
 - Send flow (issue #23): `npm run test:e2e -- --grep "Send Flow"`
+- Receive flow (issue #22): `npm run test:e2e -- --grep "Receive Flow"`
 - Dashboard integration (issue #30): `npm run test:e2e -- --grep "Issue #30"`
 
 CI runs lint, build, all Jest layers, Playwright, and coverage on every push/PR to `main`. Successful merges to `main` POST merge analytics to `MERGE_ANALYTICS_URL` (repository secret).

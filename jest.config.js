@@ -40,6 +40,18 @@ const customJestConfig = {
       lines: 85,
       statements: 85,
     },
+    'lib/receive-utils.ts': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    'lib/services/receive.service.ts': {
+      branches: 85,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
     'app/api/transactions/route.ts': {
       branches: 75,
       functions: 75,

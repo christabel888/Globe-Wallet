@@ -39,6 +39,12 @@ describe('WalletService', () => {
         })
     })
 
+    describe('generateReceiveAddress', () => {
+        it('should return the configured Stellar public key', () => {
+            expect(service.generateReceiveAddress()).toBe(TEST_STELLAR_ADDRESS)
+        })
+    })
+
     describe('shortenKey', () => {
         it('should shorten keys correctly', () => {
             const shortened = service.shortenKey(TEST_STELLAR_ADDRESS)
