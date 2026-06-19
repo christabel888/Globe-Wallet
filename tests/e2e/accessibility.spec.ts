@@ -35,7 +35,7 @@ test.describe("Issue #24 — Accessibility E2E", () => {
     await page.goto("/send");
     await page.getByLabel("Recipient Address").fill("invalid-address");
     await page.getByLabel("Amount").fill("100");
-    await page.getByTestId("send-submit-btn").click();
+    await page.getByTestId("review-button").click();
     await expect(page.getByTestId("send-error")).toBeVisible({ timeout: 5000 });
 
     const results = await new AxeBuilder({ page })
