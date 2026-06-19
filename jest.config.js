@@ -16,6 +16,12 @@ const customJestConfig = {
     '!**/*.d.ts',
   ],
   coverageThreshold: {
+    'lib/fixtures/factory.ts': {
+      branches: 80,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
     'lib/transaction-utils.ts': {
       branches: 60,
       functions: 85,
@@ -57,6 +63,42 @@ const customJestConfig = {
       functions: 75,
       lines: 75,
       statements: 75,
+    },
+    'app/api/wallet/balances/route.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+    'app/api/wallet/transactions/route.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+    'app/api/wallet/send/route.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+    'app/api/rates/route.ts': {
+      branches: 75,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+    'lib/off-ramp-utils.ts': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    'hooks/useOffRamp.ts': {
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85,
     },
   },
 }

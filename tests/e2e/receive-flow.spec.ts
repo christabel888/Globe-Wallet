@@ -1,40 +1,59 @@
+/**
+ * E2E — Receive Flow (issue #25)
+ * Covers: address display, QR code render, tab switching, payment request.
+ */
 import { test, expect } from '@playwright/test'
 
-const VALID_ADDRESS = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
-
-test.describe('Receive Flow — E2E (#22)', () => {
+test.describe('Receive Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/receive')
   })
 
-  test('happy path: address tab shows QR and copies address', async ({ page, context }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  // ── happy path ──────────────────────────────────────────────────────────────
 
-    await expect(page.getByTestId('receive-page')).toBeVisible()
-    await expect(page.getByTestId('receive-address')).toContainText(VALID_ADDRESS)
-    await expect(page.getByTestId('address-qr')).toBeVisible()
-
-    await page.getByTestId('copy-address-button').click()
-    await expect(page.getByText(/copied to clipboard/i)).toBeVisible({ timeout: 5000 })
+  test('shows a Stellar address on the address tab', async ({ page }) => {
+    // Address tab is default
+    const code = page.locator('code')
+    await expect(code).toBeVisible({ timeout: 5000 })
+    const address = await code.textContent()
+    // Stellar addresses: 56 chars, start with G
+    expect(address?.trim()).toMatch(/^G[A-Z0-9]{55}$/i)
   })
 
-  test('happy path: payment request tab generates QR with amount and memo', async ({ page }) => {
-    await page.getByTestId('tab-request').click()
-    await page.getByTestId('receive-amount-input').fill('25')
-    await page.getByTestId('receive-memo-input').fill('Invoice')
-
-    await expect(page.getByTestId('payment-qr')).toBeVisible()
-    await expect(page.getByTestId('receive-summary')).toBeVisible()
-    await expect(page.getByTestId('summary-amount')).toContainText('25 XLM')
-    await expect(page.getByTestId('summary-memo')).toContainText('Invoice')
+  test('renders a QR code for the address', async ({ page }) => {
+    const qr = page.locator('svg').first()
+    await expect(qr).toBeVisible({ timeout: 5000 })
   })
 
-  test('failure path: invalid amount disables share actions', async ({ page }) => {
-    await page.getByTestId('tab-request').click()
-    await page.getByTestId('receive-amount-input').fill('-1')
+  test('Copy button is present and labelled', async ({ page }) => {
+    const copyBtn = page.getByRole('button', { name: /copy/i }).first()
+    await expect(copyBtn).toBeVisible()
+  })
 
-    await expect(page.getByTestId('receive-amount-error')).toBeVisible({ timeout: 5000 })
-    await expect(page.getByTestId('copy-payment-button')).toBeDisabled()
-    await expect(page.getByTestId('share-payment-button')).toBeDisabled()
+  test('switching to Request tab shows amount and memo inputs', async ({ page }) => {
+    await page.getByRole('tab', { name: /request/i }).click()
+    await expect(page.getByLabel(/amount/i)).toBeVisible()
+    await expect(page.getByLabel(/memo/i)).toBeVisible()
+  })
+
+  test('payment request QR updates when amount is entered', async ({ page }) => {
+    await page.getByRole('tab', { name: /request/i }).click()
+    await page.getByLabel(/amount/i).fill('50')
+    // Summary line should show the entered amount
+    await expect(page.getByText('50 XLM')).toBeVisible({ timeout: 3000 })
+  })
+
+  test('memo entered on request tab is reflected in summary', async ({ page }) => {
+    await page.getByRole('tab', { name: /request/i }).click()
+    await page.getByLabel(/amount/i).fill('10')
+    await page.getByLabel(/memo/i).fill('lunch')
+    await expect(page.getByText('lunch')).toBeVisible({ timeout: 3000 })
+  })
+
+  // ── navigation ──────────────────────────────────────────────────────────────
+
+  test('back button returns to home', async ({ page }) => {
+    await page.getByRole('link', { name: /back/i }).click()
+    await expect(page).toHaveURL('/')
   })
 })

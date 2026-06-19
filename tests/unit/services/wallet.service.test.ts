@@ -1,12 +1,16 @@
 import { WalletService } from '../../../lib/services/wallet.service'
 import { StellarServiceError } from '../../../lib/types'
-import { TEST_STELLAR_ADDRESS } from '../../../lib/finance-data'
+import { TEST_STELLAR_ADDRESS } from '../../../lib/fixtures'
 
 describe('WalletService', () => {
     let service: WalletService
 
     beforeEach(() => {
         service = new WalletService()
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ success: true, hash: '0xhash123', status: 'completed' })
+        })
     })
 
     describe('getAccountInfo', () => {
@@ -55,7 +59,7 @@ describe('WalletService', () => {
     describe('sendPayment', () => {
         it('should execute a payment successfully', async () => {
             const result = await service.sendPayment(
-                TEST_STELLAR_ADDRESS,
+                'GC3G2N7N5LRYX6L5N2YHV3K2L9P8QW1ZC4T6BNRYX7QK3MUKXHV2RZ4D',
                 100,
                 'XLM'
             )

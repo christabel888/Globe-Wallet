@@ -40,8 +40,11 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 - [Architecture Overview](docs/architecture.md) - Deep dive into the service-oriented architecture.
 - [Enterprise Upgrade (Issue #27)](docs/issue-27.md) - Details on the v1.2.0 upgrade, including API contracts and design rationale.
 - [Send Form: Contact Selection & Confirmation (Issue #23)](docs/issue-23.md) - Two-step send flow, contact picker, API contracts, and test instructions.
-- [Receive Page: QR Generation & Payment Requests (Issue #22)](docs/issue-22.md) - Service-integrated receive flow, SEP-0007 payment URIs, API contracts, and test matrix.
-- [Dashboard Integration & Testing Strategy (Issue #30)](docs/issue-30.md) - Service-layer home dashboard wiring, `/api/transactions`, test matrix, and CI coverage goals.
+- [Developer Onboarding (Issue #29)](docs/issue-29.md) - Repo structure, conventions, testing strategy, and contributor guide.
+- [E2E Testing: Core Wallet Flows (Issue #25)](docs/issue-25.md) - Playwright E2E journeys for receive, convert, off-ramp, savings, cards, and profile.
+- [Environment Setup & Stellar Network Configuration (Issue #28)](docs/issue-28.md) - Environment variables, testnet vs mainnet setup, and key security rules.
+- [Mock Centralization (Issue #14)](docs/issue-14.md) - Centralized fixtures/data service, API contracts, test strategy, and rollout notes.
+- [Off-Ramp Payout Validation & Fee Calculation (Issue #21)](docs/issue-21.md) - Extracted utility functions for fee parsing, validation error codes, PayoutSummary component, and comprehensive test suite (>90% coverage).
 
 [Continue working on v0 →](https://v0.app/chat/projects/prj_Z6moUc7brx5QzV1vPHQC842r9sYK)
 
