@@ -14,6 +14,7 @@ import { ratesService, type ExchangeRate } from "@/lib/services/rates.service"
 import type { AssetCode } from "@/lib/types"
 
 export default function ConvertPage() {
+  const { getAssets, convert } = useAssets()
   const [fromAmount, setFromAmount] = useState("")
   const [toAmount, setToAmount] = useState("")
   const [fromCurrency, setFromCurrency] = useState<AssetCode>("XLM")
@@ -59,16 +60,16 @@ export default function ConvertPage() {
   }
 
   const calculateConversion = (amount: string, isFromAmount: boolean) => {
-    const rate = getCurrentRate()
+    const rate = MOCK_CONVERSION_RATES[fromCurrency]?.[toCurrency]
     if (!rate || !amount) return ""
 
     const numAmount = parseFloat(amount)
     if (isNaN(numAmount)) return ""
 
     if (isFromAmount) {
-      return (numAmount * rate.rate).toFixed(6)
+      return (numAmount * rate).toFixed(6)
     } else {
-      return (numAmount / rate.rate).toFixed(6)
+      return (numAmount / rate).toFixed(6)
     }
   }
 
@@ -192,7 +193,7 @@ export default function ConvertPage() {
               <div className="flex items-center justify-between">
                 <Label>From</Label>
                 <span className="text-xs text-muted-foreground">
-                  Balance: {balances[fromCurrency as keyof typeof balances]?.toFixed(2)} {fromCurrency}
+                  Balance: {balances[fromCurrency]?.toFixed(2)} {fromCurrency}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -204,7 +205,7 @@ export default function ConvertPage() {
                     onChange={(e) => handleFromAmountChange(e.target.value)}
                   />
                 </div>
-                <Select value={fromCurrency} onValueChange={setFromCurrency}>
+                <Select value={fromCurrency} onValueChange={(val: string) => setFromCurrency(val as AssetCode)}>
                   <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
@@ -215,12 +216,12 @@ export default function ConvertPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {fromAmount && (
+              {fromAmount && balances[fromCurrency] && (
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-xs h-6 p-1"
-                  onClick={() => handleFromAmountChange(balances[fromCurrency as keyof typeof balances].toString())}
+                  onClick={() => handleFromAmountChange(balances[fromCurrency].toString())}
                 >
                   Use max
                 </Button>
@@ -244,7 +245,7 @@ export default function ConvertPage() {
               <div className="flex items-center justify-between">
                 <Label>To</Label>
                 <span className="text-xs text-muted-foreground">
-                  Balance: {balances[toCurrency as keyof typeof balances]?.toFixed(2)} {toCurrency}
+                  Balance: {balances[toCurrency]?.toFixed(2)} {toCurrency}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -256,7 +257,7 @@ export default function ConvertPage() {
                     onChange={(e) => handleToAmountChange(e.target.value)}
                   />
                 </div>
-                <Select value={toCurrency} onValueChange={setToCurrency}>
+                <Select value={toCurrency} onValueChange={(val: string) => setToCurrency(val as AssetCode)}>
                   <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
