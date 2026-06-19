@@ -4,10 +4,15 @@ const createJestConfig = nextJest({
   dir: './',
 })
 
+/** @type {import('jest').Config} */
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/', '<rootDir>/tests/e2e/'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  moduleNameMapper: {
+    '^.+\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+  },
   collectCoverageFrom: [
     'lib/**/*.{js,jsx,ts,tsx}',
     'hooks/**/*.{js,jsx,ts,tsx}',
@@ -103,4 +108,6 @@ const customJestConfig = {
   },
 }
 
-module.exports = createJestConfig(customJestConfig)
+module.exports = async () => ({
+  ...(await createJestConfig(customJestConfig)()),
+})
