@@ -153,6 +153,7 @@ Globe Wallet targets **>90% coverage** on business logic in `lib/`, `hooks/`, an
 **E2E highlights**
 
 - Send flow (issue #23): `npm run test:e2e -- --grep "Send Flow"`
+- Receive flow (issue #22): `npm run test:e2e -- --grep "Receive Flow"`
 - Dashboard integration (issue #30): `npm run test:e2e -- --grep "Issue #30"`
 - Accessibility audit (issue #24): `npm run test:a11y:e2e`
 

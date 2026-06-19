@@ -1,53 +1,15 @@
 "use client"
 
-import { useState } from "react"
 import { AppShell } from "@/components/app/app-shell"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Copy, Share, ArrowLeft, QrCode } from "lucide-react"
-import { QRCodeSVG } from "qrcode.react"
-import Link from "next/link"
-import { toast } from "sonner"
+import { PageHeader } from "@/components/app/page-header"
+import { ReceiveForm } from "@/components/app/receive-form"
 
 export default function ReceivePage() {
-  const [amount, setAmount] = useState("")
-  const [memo, setMemo] = useState("")
-  
-  // Mock Stellar address - in real app this would come from wallet
-  const stellarAddress = "GCKFBEIYTKP33HLSB67JDDK6HDKZGSPNGDHCYE6ZDEJ7JBQQTGXCUO7D"
-  
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success(`${label} copied to clipboard`)
-  }
-  
-  const shareAddress = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'My Stellar Address',
-        text: `Send XLM to: ${stellarAddress}`,
-      })
-    } else {
-      copyToClipboard(stellarAddress, "Address")
-    }
-  }
-  
-  const generatePaymentQR = () => {
-    let qrData = stellarAddress
-    if (amount) {
-      qrData += `?amount=${amount}`
-    }
-    if (memo) {
-      qrData += `${amount ? '&' : '?'}memo=${encodeURIComponent(memo)}`
-    }
-    return qrData
-  }
-
   return (
     <AppShell>
+      <PageHeader title="Receive XLM" back="/" />
+      <div className="px-4 pb-4" data-testid="receive-page">
+        <ReceiveForm />
       <div className="flex items-center gap-4 p-4 pb-2">
         <Link
           href="/"

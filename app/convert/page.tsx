@@ -59,7 +59,7 @@ export default function ConvertPage() {
   }
 
   const calculateConversion = (amount: string, isFromAmount: boolean) => {
-    const rate = MOCK_CONVERSION_RATES[fromCurrency]?.[toCurrency]
+    const rate = getCurrentRate()?.rate
     if (!rate || !amount) return ""
 
     const numAmount = parseFloat(amount)
