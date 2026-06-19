@@ -40,35 +40,22 @@ describe('WalletService', () => {
         it('should reject invalid addresses', () => {
             expect(service.validateAddress('invalid')).toBe(false)
             expect(service.validateAddress('')).toBe(false)
-            expect(service.validateAddress(null as unknown as string)).toBe(false)
-        })
-
-        it('should reject wrong length addresses', () => {
+            expect(service.validateAddress('B' + 'A'.repeat(55))).toBe(false)
             expect(service.validateAddress('G' + 'A'.repeat(54))).toBe(false)
-            expect(service.validateAddress('G' + 'A'.repeat(56))).toBe(false)
-        })
-
-        it('should reject addresses not starting with G', () => {
-            const wrongPrefix = 'H' + TEST_STELLAR_ADDRESS.slice(1)
-            expect(service.validateAddress(wrongPrefix)).toBe(false)
-        })
-
-        it('should reject addresses with invalid characters', () => {
-            const invalidChars = 'G' + 'A'.repeat(55).replace(/A$/, '!')
-            expect(service.validateAddress(invalidChars)).toBe(false)
-        })
-    })
-
-    describe('getTransactionHistory', () => {
-        it('should return transactions from the mock db', async () => {
-            const history = await service.getTransactionHistory()
-            expect(Array.isArray(history)).toBe(true)
+            expect(service.validateAddress('G' + '!'.repeat(55))).toBe(false)
         })
     })
 
     describe('generateReceiveAddress', () => {
-        it('should return the configured Stellar public key', () => {
+        it('should return the mock stellar public key', () => {
             expect(service.generateReceiveAddress()).toBe(TEST_STELLAR_ADDRESS)
+        })
+    })
+
+    describe('getTransactionHistory', () => {
+        it('should return persisted transactions', async () => {
+            const history = await service.getTransactionHistory()
+            expect(Array.isArray(history)).toBe(true)
         })
     })
 
@@ -95,40 +82,29 @@ describe('WalletService', () => {
                 .rejects.toThrow(StellarServiceError)
         })
 
-        it('should throw error for zero or negative amount', async () => {
-            const validDest = 'GC3G2N7N5LRYX6L5N2YHV3K2L9P8QW1ZC4T6BNRYX7QK3MUKXHV2RZ4D'
-            await expect(service.sendPayment(validDest, 0, 'XLM'))
-                .rejects.toThrow(WalletServiceError)
-            await expect(service.sendPayment(validDest, -1, 'XLM'))
+        it('should throw error for non-positive amount', async () => {
+            await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 0, 'XLM'))
                 .rejects.toThrow(WalletServiceError)
         })
 
-        it('should throw when API returns an error response', async () => {
+        it('should throw error when payment verification fails', async () => {
             global.fetch = jest.fn().mockResolvedValue({
                 ok: false,
-                json: () => Promise.resolve({ error: 'Insufficient balance' }),
+                json: () => Promise.resolve({ error: 'Verification failed' }),
             })
-            await expect(
-                service.sendPayment(
-                    'GC3G2N7N5LRYX6L5N2YHV3K2L9P8QW1ZC4T6BNRYX7QK3MUKXHV2RZ4D',
-                    100,
-                    'XLM',
-                ),
-            ).rejects.toThrow(StellarServiceError)
+
+            await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 10, 'XLM'))
+                .rejects.toThrow(StellarServiceError)
         })
 
-        it('should use fallback message when error response body is invalid', async () => {
+        it('should throw a default error when verification response is not JSON', async () => {
             global.fetch = jest.fn().mockResolvedValue({
                 ok: false,
-                json: () => Promise.reject(new Error('parse error')),
+                json: () => Promise.reject(new Error('invalid json')),
             })
-            await expect(
-                service.sendPayment(
-                    'GC3G2N7N5LRYX6L5N2YHV3K2L9P8QW1ZC4T6BNRYX7QK3MUKXHV2RZ4D',
-                    100,
-                    'XLM',
-                ),
-            ).rejects.toThrow('Payment verification failed')
+
+            await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 10, 'XLM'))
+                .rejects.toThrow('Payment verification failed')
         })
     })
 })

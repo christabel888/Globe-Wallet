@@ -77,12 +77,14 @@ export function TransactionList({ limit }: TransactionListProps) {
 
   if (!loading && items.length === 0) {
     return (
-      <div
+      <p
         className="py-8 text-center text-sm text-muted-foreground"
         data-testid="transaction-list-empty"
+        role="status"
+        aria-live="polite"
       >
         No transactions yet
-      </div>
+      </p>
     );
   }
 
