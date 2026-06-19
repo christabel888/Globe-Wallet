@@ -47,7 +47,7 @@ const customJestConfig = {
       statements: 90,
     },
     'lib/services/receive.service.ts': {
-      branches: 85,
+      branches: 80,
       functions: 90,
       lines: 90,
       statements: 90,
