@@ -48,10 +48,6 @@ function buildContainer() {
 describe('Receive flow integration — issue #22', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    Object.assign(navigator, {
-      clipboard: { writeText: jest.fn().mockResolvedValue(undefined) },
-      share: undefined,
-    })
   })
 
   it('loads receive address from wallet service', () => {

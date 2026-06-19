@@ -65,13 +65,9 @@ function renderReceiveForm() {
   )
 }
 
-beforeEach(() => {
-  jest.clearAllMocks()
-  Object.assign(navigator, {
-    clipboard: { writeText: jest.fn().mockResolvedValue(undefined) },
-    share: undefined,
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
-})
 
 describe('ReceiveForm — issue #22', () => {
   it('renders address tab with service-layer address and QR', () => {
@@ -131,7 +127,11 @@ describe('ReceiveForm — issue #22', () => {
 
   it('uses Web Share API when available', async () => {
     const share = jest.fn().mockResolvedValue(undefined)
-    Object.assign(navigator, { share })
+    Object.defineProperty(navigator, 'share', {
+      value: share,
+      configurable: true,
+      writable: true,
+    })
 
     renderReceiveForm()
     fireEvent.click(screen.getByTestId('share-address-button'))
