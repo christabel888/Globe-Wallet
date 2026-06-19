@@ -31,23 +31,24 @@ const mockClipboard = {
 }
 
 function installNavigatorMocks() {
-  Object.defineProperty(global.navigator, 'clipboard', {
-    value: mockClipboard,
-    configurable: true,
-    writable: true,
-  })
-  Object.defineProperty(global.navigator, 'share', {
-    value: undefined,
-    configurable: true,
-    writable: true,
-  })
-  if (typeof window !== 'undefined' && window.navigator) {
-    Object.defineProperty(window.navigator, 'clipboard', {
+  const navigators = []
+  if (typeof global.navigator === 'object' && global.navigator !== null) {
+    navigators.push(global.navigator)
+  }
+  if (typeof window !== 'undefined' && window.navigator && !navigators.includes(window.navigator)) {
+    navigators.push(window.navigator)
+  }
+  if (navigators.length === 0) {
+    return
+  }
+
+  for (const navigator of navigators) {
+    Object.defineProperty(navigator, 'clipboard', {
       value: mockClipboard,
       configurable: true,
       writable: true,
     })
-    Object.defineProperty(window.navigator, 'share', {
+    Object.defineProperty(navigator, 'share', {
       value: undefined,
       configurable: true,
       writable: true,
