@@ -201,6 +201,8 @@ export function buildPayoutBreakdown(
 
 // ── Validation ─────────────────────────────────────────────────────────────────
 
+const LIMIT_EPS = 1e-9;
+
 /**
  * Validate a withdrawal request against business rules.
  * Returns a result indicating whether the withdrawal is valid, and if not,
@@ -219,9 +221,8 @@ export function validateWithdrawal(
   } = input;
 
   const numericAmount =
-    typeof amount === "string" ? parseFloat(amount) : amount;
+    typeof amount === "string" ? Number(amount.trim()) : Number(amount);
 
-  // 1. Amount must be a positive finite number
   if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
     return {
       valid: false,
@@ -230,8 +231,7 @@ export function validateWithdrawal(
     };
   }
 
-  // 2. Payment method must be specified
-  if (!paymentMethodId || paymentMethodId.trim() === "") {
+  if (!paymentMethodId || String(paymentMethodId).trim() === "") {
     return {
       valid: false,
       errorCode: "NO_PAYMENT_METHOD",
@@ -239,26 +239,6 @@ export function validateWithdrawal(
     };
   }
 
-  // 3. Asset must be recognised
-  if (rates[asset] === undefined) {
-    return {
-      valid: false,
-      errorCode: "UNKNOWN_ASSET",
-      errorMessage: `Unsupported asset: ${asset}`,
-    };
-  }
-
-  // 4. Balance check
-  const balance = balances[asset] ?? 0;
-  if (numericAmount > balance) {
-    return {
-      valid: false,
-      errorCode: "INSUFFICIENT_BALANCE",
-      errorMessage: `Insufficient ${asset} balance`,
-    };
-  }
-
-  // 5. Payment method must exist and be enabled
   const method = methods.find((m) => m.id === paymentMethodId);
   if (!method) {
     return {
@@ -276,20 +256,40 @@ export function validateWithdrawal(
     };
   }
 
-  // 6. Limit checks (applied to USD value)
+  if (rates[asset] === undefined) {
+    return {
+      valid: false,
+      errorCode: "UNKNOWN_ASSET",
+      errorMessage: `Unsupported asset: ${asset}`,
+    };
+  }
+
+  const balance = balances[asset] ?? 0;
+  if (numericAmount > balance + LIMIT_EPS) {
+    return {
+      valid: false,
+      errorCode: "INSUFFICIENT_BALANCE",
+      errorMessage: `Insufficient ${asset} balance`,
+    };
+  }
+
   const usdValue = getUSDValue(numericAmount, asset, rates);
-  if (usdValue < method.limits.min) {
+  const min = method.limits?.min ?? 0;
+  const max = method.limits?.max ?? Number.POSITIVE_INFINITY;
+
+  if (usdValue + LIMIT_EPS < min) {
     return {
       valid: false,
       errorCode: "BELOW_MIN_LIMIT",
-      errorMessage: `Amount must be at least $${method.limits.min}`,
+      errorMessage: `Amount must be at least ${formatUSD(min)}`,
     };
   }
-  if (usdValue > method.limits.max) {
+
+  if (usdValue - LIMIT_EPS > max) {
     return {
       valid: false,
       errorCode: "ABOVE_MAX_LIMIT",
-      errorMessage: `Amount must be at most $${method.limits.max.toLocaleString()}`,
+      errorMessage: `Amount must be at most ${formatUSD(max)}`,
     };
   }
 

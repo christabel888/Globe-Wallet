@@ -16,7 +16,9 @@ export abstract class BaseService {
      * as defined in issue-27.md Error Code Mapping.
      */
     protected handleError(error: any, context: string): never {
-        console.error(`[${this.serviceName}] Error in ${context}:`, error)
+        if (process.env.NODE_ENV !== 'test') {
+            console.error(`[${this.serviceName}] Error in ${context}:`, error)
+        }
 
         if (error instanceof ServiceError) {
             throw error
