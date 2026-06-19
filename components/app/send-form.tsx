@@ -40,7 +40,7 @@ export function SendForm() {
   const { validateAddress } = useWallet();
   const { send, isProcessing, status, error, result, reset } = useWalletSend();
   const { formatAsset } = usePricing();
-  const { assets } = useBalances();
+  const { assets, loading: balancesLoading } = useBalances();
   const contactsState = useContacts();
 
   const [step, setStep] = useState<"form" | "confirm">("form");
@@ -89,6 +89,7 @@ export function SendForm() {
     }
 
     if (
+      !balancesLoading &&
       assets.some((a) => a.code === selectedAsset) &&
       numAmount > currentAssetBalance
     ) {
