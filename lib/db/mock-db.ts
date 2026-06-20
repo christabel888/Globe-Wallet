@@ -1,10 +1,6 @@
-import { StellarAccount, Transaction, AssetCode } from '../types'
+import { Transaction, TransactionFilters, TransactionPage } from '../types'
 import { MOCK_STELLAR_ACCOUNT, MOCK_TRANSACTIONS_COMPACT } from '../fixtures'
-
-/**
- * Level 2 Architecture Sync: Persistent Storage Abstraction
- * This module simulates the persistence layer defined in architecture.md (Database Schema section).
- */
+import { filterAndSortTransactions } from '../transaction-utils'
 
 interface UserSchema {
     id: string
@@ -24,29 +20,33 @@ interface WalletAccountSchema {
     created_at: string
 }
 
+interface SyncState {
+    lastSyncAt: string | null
+    totalSynced: number
+}
+
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
 class MockDB {
     private users: UserSchema[] = []
     private walletAccounts: WalletAccountSchema[] = []
     private transactions: Transaction[] = []
+    private syncState: SyncState = { lastSyncAt: null, totalSynced: 0 }
 
     constructor() {
         this.initializeDefaults()
     }
 
     private initializeDefaults() {
-        // Mock User
         const userId = generateId()
         this.users.push({
             id: userId,
             email: 'user@globe.wallet',
             password_hash: 'argon2...hash',
             kyc_status: 'verified',
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
         })
 
-        // Mock Wallet Account (Synchronized with architecture.md)
         this.walletAccounts.push({
             id: generateId(),
             user_id: userId,
@@ -54,30 +54,58 @@ class MockDB {
             encrypted_private_key: 'vault...key',
             account_type: 'standard',
             is_active: true,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
         })
 
-        // Initial Transactions (preserve display metadata from seed data)
         this.transactions = MOCK_TRANSACTIONS_COMPACT.map((tx) => ({ ...tx }))
     }
 
-    // User Operations
     async getUser(email: string): Promise<UserSchema | undefined> {
         return this.users.find(u => u.email === email)
     }
 
-    // Wallet Operations
     async getAccountByPublicKey(publicKey: string): Promise<WalletAccountSchema | undefined> {
         return this.walletAccounts.find(w => w.public_key === publicKey)
     }
 
-    // Transaction Operations
     async getTransactions(): Promise<Transaction[]> {
-        return this.transactions
+        return [...this.transactions]
+    }
+
+    async queryTransactions(filters: TransactionFilters = {}): Promise<TransactionPage> {
+        const { limit = 20, offset = 0, ...rest } = filters
+        const allFiltered = filterAndSortTransactions([...this.transactions], rest)
+        const total = allFiltered.length
+        const data = allFiltered.slice(offset, offset + limit)
+        return { data, total, offset, limit, hasMore: offset + data.length < total }
+    }
+
+    async getTransactionById(id: string): Promise<Transaction | undefined> {
+        return this.transactions.find(t => t.id === id)
     }
 
     async saveTransaction(tx: Transaction): Promise<void> {
         this.transactions.unshift(tx)
+    }
+
+    async updateTransactionStatus(id: string, status: Transaction['status']): Promise<boolean> {
+        const tx = this.transactions.find(t => t.id === id)
+        if (!tx) return false
+        tx.status = status
+        return true
+    }
+
+    async countPending(): Promise<number> {
+        return this.transactions.filter(t => t.status === 'pending').length
+    }
+
+    getSyncState(): SyncState {
+        return { ...this.syncState }
+    }
+
+    recordSync(added: number): void {
+        this.syncState.lastSyncAt = new Date().toISOString()
+        this.syncState.totalSynced += added
     }
 }
 

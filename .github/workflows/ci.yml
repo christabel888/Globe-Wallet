@@ -64,10 +64,26 @@ jobs:
 
     - name: Run E2E tests (issue #16 app shell a11y)
       run: 'npm run test:e2e -- --grep "@shell-a11y"'
+    - name: Run E2E tests (issue #13 transaction history)
+      run: 'npm run test:e2e -- --grep "@transaction-history"'
 
     - name: Run full E2E suite
       run: npm run test:e2e
 
+
+    - name: Issue #19 - Run issue-19 unit tests
+      run: npx jest tests/unit/analytics.service.test.ts --silent
+
+    - name: Issue #19 - Run issue-19 component tests
+      run: npx jest tests/component/TestCoverageCard.test.tsx --silent
+
+    - name: Issue #19 - Run issue-19 integration tests
+      run: npx jest tests/integration/health-api.test.ts --silent
+
+    - name: Issue #19 - Run health check E2E tests
+      run: 'npm run test:e2e -- --grep "Health Check API"'
+
+  merge-analytics:
   merge-analytics:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -96,6 +112,8 @@ jobs:
             "author": "${{ github.actor }}",
             "issue": 16,
             "issues": [14, 16, 21, 23, 24, 25, 28, 30],
+            "issue": 24,
+            "issues": [14, 19, 21, 23, 24, 25, 28, 30],
             "status": "success",
             "coverage_verified": true,
             "fixture_coverage_verified": true,
