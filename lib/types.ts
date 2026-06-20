@@ -477,6 +477,66 @@ export interface PersistedWithdrawal {
 
 // ── Container Interface ──────────────────────────────────────────────────────
 
+
+
+// ── Issue #19: Enhanced Enterprise Types ──────────────────────────────────────
+
+/** Configuration for the analytics POST on merge events. */
+export interface MergeAnalyticsConfig {
+  url: string;
+  enabled: boolean;
+}
+
+/** Settings for test environment isolation. */
+export interface TestEnvironmentConfig {
+  mockApiDelay: number;
+  simulateErrors: boolean;
+  errorRate: number;
+}
+
+/** Represents a CI workflow step result. */
+export interface CIWorkflowStep {
+  name: string;
+  status: "success" | "failure" | "skipped";
+  durationMs: number;
+  output?: string;
+}
+
+/** Merge analytics payload for CI/CD pipeline tracking. */
+export interface MergeAnalyticsPayloadV2 {
+  event: "merge";
+  repository: string;
+  branch: string;
+  commit: string;
+  timestamp: string;
+  author: string;
+  issue: number;
+  issues: number[];
+  status: "success" | "failure";
+  coverage_verified: boolean;
+  fixture_coverage_verified: boolean;
+  accessibility_verified: boolean;
+  test_count: number;
+  pass_count: number;
+  fail_count: number;
+}
+
+/** API health check response type. */
+export interface HealthCheckResponse {
+  status: "healthy" | "degraded" | "unhealthy";
+  version: string;
+  uptime: number;
+  services: Record<string, "up" | "down">;
+}
+
+/** Generic paginated API response wrapper. */
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
 export interface IFinanceServiceContainer {
   wallet: IWalletService;
   pricing: IPricingService;
