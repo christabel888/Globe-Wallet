@@ -45,8 +45,10 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 - [E2E Testing: Core Wallet Flows (Issue #25)](docs/issue-25.md) - Playwright E2E journeys for receive, convert, off-ramp, savings, cards, and profile.
 - [Environment Setup & Stellar Network Configuration (Issue #28)](docs/issue-28.md) - Environment variables, testnet vs mainnet setup, and key security rules.
 - [Mock Centralization (Issue #14)](docs/issue-14.md) - Centralized fixtures/data service, API contracts, test strategy, and rollout notes.
+- [Enterprise-Grade Integration & Testability (Issue #19)](docs/issue-19.md) - Health check API, analytics service, enhanced input component, coverage dashboard, and expanded type system.
 - [Off-Ramp Payout Validation & Fee Calculation (Issue #21)](docs/issue-21.md) - Extracted utility functions for fee parsing, validation error codes, PayoutSummary component, and comprehensive test suite (>90% coverage).
 - [Chart & Analytics: Recharts Types, Data Pipeline & Tests (Issue #15)](docs/issue-15.md) - Hardened Recharts TypeScript types, analytics data pipeline, `GET /api/analytics` endpoint, `useAnalytics` hook, and full test suite (unit/component/integration/E2E).
+- [Transaction History: Persistent API, Sync & Tests (Issue #13)](docs/issue-13.md) - Paginated transactions API, sync service, MockDB enhancements, useTransactionHistory hook, and full test suite.
 
 [Continue working on v0 →](https://v0.app/chat/projects/prj_Z6moUc7brx5QzV1vPHQC842r9sYK)
 
