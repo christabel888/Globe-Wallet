@@ -75,6 +75,10 @@ export interface SendConfirmation {
   asset: AssetCode;
   memo?: string;
   estimatedFee: number;
+  /** Set when recipient was resolved from a federated address (e.g. "alice*stellar.org") */
+  federatedInput?: string;
+  /** Memo surfaced from the federation record, shown in summary */
+  federationMemo?: string;
 }
 
 /** Request body for /api/send */
@@ -360,6 +364,41 @@ export interface IFiatService {
   formatMoney(amount: number, currency: CurrencyCode, hidden?: boolean): string;
   convertCurrency(from: CurrencyCode, to: CurrencyCode, amount: number): number;
   getAccountBalance(): number;
+}
+
+// ── Issue #11: Crypto-Native Send Flow / Federation Types ────────────────────
+
+/** Resolution states for a Stellar federated address lookup */
+export type AddressLookupStatus = 'idle' | 'resolving' | 'resolved' | 'not-found' | 'error'
+
+/** Result returned by the federation lookup hook and service */
+export interface AddressLookupResult {
+  status: AddressLookupStatus
+  /** The raw input string that was looked up */
+  input: string
+  /** The resolved G… Stellar public key (only when status === 'resolved') */
+  resolved?: string
+  /** Optional memo attached to the federation record */
+  federationMemo?: string
+  /** Human-readable error when status === 'error' */
+  error?: string
+}
+
+/** A resolved Stellar federated address record */
+export interface FederatedAddress {
+  /** Original user input, e.g. "alice*stellar.org" */
+  input: string
+  /** Resolved G… public key */
+  accountId: string
+  memo?: string
+  memoType?: 'text' | 'id' | 'hash'
+}
+
+export interface IFederationService {
+  /** Returns true if the input looks like a federated address (user*domain.tld) */
+  isFederated(input: string): boolean
+  /** Resolve a federated address string to a public key + optional memo */
+  lookup(federatedAddress: string): Promise<AddressLookupResult>
 }
 
 export interface MergeAnalyticsPayload {

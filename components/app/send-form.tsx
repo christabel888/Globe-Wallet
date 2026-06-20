@@ -21,11 +21,13 @@ import {
 } from "@/components/ui/card";
 import { WalletErrorAlert } from "@/components/ui/wallet-error-alert";
 import { ContactPicker } from "@/components/ui/contact-picker";
+import { AddressLookupBadge } from "@/components/ui/address-lookup-badge";
 import { SendSummary } from "@/components/dashboard/send-summary";
 import { usePricing, useWallet } from "@/hooks/useFinanceServices";
 import { useBalances } from "@/hooks/useBalances";
 import { useContacts } from "@/hooks/useContacts";
 import { useWalletSend } from "@/hooks/useWalletSend";
+import { useAddressLookup } from "@/hooks/useAddressLookup";
 import {
   Select,
   SelectContent,
@@ -34,6 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { calculateFee } from "@/lib/helpers/format";
+import { isFederatedAddress } from "@/lib/helpers/send-utils";
 import type { AssetCode, SendConfirmation } from "@/lib/types";
 
 export function SendForm() {
@@ -58,7 +61,18 @@ export function SendForm() {
   const amountId = useId();
   const memoId = useId();
 
-  const effectiveAddress = contactsState.selected?.address ?? address;
+  // Federation lookup — only active when user typed directly (no contact selected)
+  const lookupInput = contactsState.selected ? "" : address;
+  const lookupResult = useAddressLookup(lookupInput);
+
+  // Resolve the effective destination address
+  // Priority: selected contact → federation-resolved key → raw typed address
+  const effectiveAddress = useMemo(() => {
+    if (contactsState.selected?.address) return contactsState.selected.address;
+    if (lookupResult.status === "resolved" && lookupResult.resolved)
+      return lookupResult.resolved;
+    return address;
+  }, [contactsState.selected, lookupResult, address]);
 
   const currentAssetBalance = useMemo(
     () => assets.find((a) => a.code === selectedAsset)?.balance ?? 0,
@@ -74,6 +88,24 @@ export function SendForm() {
     e.preventDefault();
     setFormError(null);
     reset();
+
+    // If user typed a federated address, guard against in-flight or failed lookups
+    if (!contactsState.selected && isFederatedAddress(address)) {
+      if (lookupResult.status === "resolving") {
+        setFormError("Address is still resolving. Please wait a moment.");
+        return;
+      }
+      if (lookupResult.status === "not-found") {
+        setFormError(
+          "No federation record found for this address. Check the address and try again.",
+        );
+        return;
+      }
+      if (lookupResult.status === "error") {
+        setFormError(lookupResult.error ?? "Address lookup failed.");
+        return;
+      }
+    }
 
     if (!validateAddress(effectiveAddress)) {
       setFormError(
@@ -104,6 +136,12 @@ export function SendForm() {
       asset: selectedAsset,
       memo: memo || undefined,
       estimatedFee,
+      // Carry federation metadata into the confirmation summary
+      federatedInput: isFederatedAddress(address) ? address : undefined,
+      federationMemo:
+        lookupResult.status === "resolved"
+          ? lookupResult.federationMemo
+          : undefined,
     });
     setStep("confirm");
   };
@@ -205,7 +243,7 @@ export function SendForm() {
         <CardDescription>
           {step === "confirm"
             ? "Review the details before confirming."
-            : "Transfer Lumens or tokens securely to any Stellar address."}
+            : "Transfer Lumens or tokens to any Stellar address or federated name."}
         </CardDescription>
       </CardHeader>
 
@@ -228,14 +266,14 @@ export function SendForm() {
             </div>
 
             {!contactsState.selected?.address && (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label htmlFor={addressId} className="text-sm font-medium">
                   Recipient Address
                 </label>
                 <Input
                   id={addressId}
                   data-testid="address-input"
-                  placeholder="e.g. GDXSPAY..."
+                  placeholder="e.g. GDXSPAY… or alice*stellar.org"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="bg-background/50"
@@ -244,6 +282,7 @@ export function SendForm() {
                   autoComplete="off"
                   spellCheck={false}
                 />
+                <AddressLookupBadge result={lookupResult} className="mt-1" />
               </div>
             )}
 
