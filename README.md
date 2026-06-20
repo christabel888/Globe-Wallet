@@ -38,6 +38,7 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 ## Documentation
 
 - [Architecture Overview](docs/architecture.md) - Deep dive into the service-oriented architecture.
+- [Chart Recharts Strict Typing (Issue #17)](docs/issue-17.md) - Strict Recharts TypeScript types for chart components, API contracts, and test instructions.
 - [Enterprise Upgrade (Issue #27)](docs/issue-27.md) - Details on the v1.2.0 upgrade, including API contracts and design rationale.
 - [Send Form: Contact Selection & Confirmation (Issue #23)](docs/issue-23.md) - Two-step send flow, contact picker, API contracts, and test instructions.
 - [Developer Onboarding (Issue #29)](docs/issue-29.md) - Repo structure, conventions, testing strategy, and contributor guide.

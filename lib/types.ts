@@ -604,6 +604,64 @@ export interface IA11yService {
   auditPage(request: A11yAuditRequest): A11yAuditResponse;
 }
 
+// ── Chart Types (Issue #17) ──────────────────────────────────────────────────
+
+/** A single data point in the weekly activity bar chart. */
+export interface ChartDailyDataPoint {
+  /** Short day label, e.g. "M", "T", "W" */
+  day: string;
+  /** Activity percentage value 0–100 */
+  value: number;
+  /** Full day name shown in tooltip, e.g. "Monday" */
+  label: string;
+}
+
+/** A typed Recharts payload entry for bar chart tooltips. */
+export interface ChartTooltipEntry {
+  value: number;
+  dataKey: string;
+  name: string;
+  /** The underlying row object from `chartData` */
+  payload: ChartDailyDataPoint;
+  fill?: string;
+  color?: string;
+  unit?: string;
+}
+
+/** Props received by a custom Recharts tooltip content component. */
+export interface ActivityTooltipProps {
+  active?: boolean;
+  payload?: ChartTooltipEntry[];
+  label?: string;
+}
+
+/** Generic analytics chart data point. */
+export interface ChartAnalyticsEntry {
+  category: string;
+  value: number;
+  secondaryValue?: number;
+  meta?: Record<string, string | number>;
+}
+
+/** Configuration for a single chart series (bar, line, area). */
+export interface ChartSeriesConfig {
+  dataKey: string;
+  label: string;
+  color: string;
+  gradientId?: string;
+}
+
+/** Response from GET /api/analytics */
+export interface ChartAnalyticsApiResponse {
+  success: boolean;
+  data?: {
+    period: "week" | "month" | "year";
+    points: ChartDailyDataPoint[];
+    average: number;
+    peak: number;
+  };
+  error?: string;
+}
 // ── Transaction History API Types (Issue #13) ────────────────────────────────
 
 export interface TransactionsResponse {
