@@ -3,8 +3,9 @@
 import { Card } from "@/components/ui/card"
 import { useState } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import type { ChartDailyDataPoint, ActivityTooltipProps } from "@/lib/types"
 
-const chartData = [
+const chartData: ChartDailyDataPoint[] = [
   { day: "S", value: 45, label: "Sunday" },
   { day: "M", value: 75, label: "Monday" },
   { day: "T", value: 74, label: "Tuesday" },
@@ -14,14 +15,14 @@ const chartData = [
   { day: "S", value: 50, label: "Saturday" },
 ]
 
-const barColors = ["#059669", "#047857", "#10b981", "#065f46", "#059669", "#047857", "#10b981"]
+const barColors: string[] = ["#059669", "#047857", "#10b981", "#065f46", "#059669", "#047857", "#10b981"]
 
 export function ProjectAnalytics() {
   const [hoveredBar, setHoveredBar] = useState<number | null>(null)
   const maxValue = Math.max(...chartData.map((d) => d.value))
   const average = Math.round(chartData.reduce((acc, d) => acc + d.value, 0) / chartData.length)
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: ActivityTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-foreground text-background px-3 py-2 rounded-lg text-xs font-semibold shadow-lg">
