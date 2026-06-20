@@ -543,3 +543,76 @@ export interface IA11yService {
   getStandard(): A11yWcagStandard;
   auditPage(request: A11yAuditRequest): A11yAuditResponse;
 }
+
+// ── Transaction History API Types (Issue #13) ────────────────────────────────
+
+export interface TransactionsResponse {
+  success: boolean;
+  data?: Transaction[];
+  error?: string;
+}
+
+export type TransactionSortField = 'date' | 'amount' | 'asset';
+export type TransactionSortOrder = 'asc' | 'desc';
+
+export interface TransactionFilters {
+  type?: TransactionDirection;
+  category?: TransactionCategory;
+  asset?: AssetCode;
+  status?: Transaction['status'];
+  from?: string;
+  to?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+  sortBy?: TransactionSortField;
+  sortOrder?: TransactionSortOrder;
+}
+
+export interface TransactionPage {
+  data: Transaction[];
+  total: number;
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export interface TransactionPageResponse {
+  success: boolean;
+  data?: TransactionPage;
+  error?: string;
+}
+
+export interface AddTransactionRequest {
+  type: Transaction['type'];
+  amount: number;
+  asset: AssetCode;
+  address: string;
+  category?: TransactionCategory;
+  name?: string;
+  detail?: string;
+  currency?: CurrencyCode;
+  stellarHash?: string;
+}
+
+export interface TransactionSyncStatus {
+  lastSyncAt: string | null;
+  isSyncing: boolean;
+  totalSynced: number;
+  pendingCount: number;
+}
+
+export interface TransactionSyncResult {
+  added: number;
+  updated: number;
+  failed: number;
+  lastSyncAt: string;
+}
+
+export interface ITransactionSyncService {
+  syncFromNetwork(): Promise<TransactionSyncResult>;
+  getLastSyncTime(): string | null;
+  getSyncStatus(): TransactionSyncStatus;
+  getRecentTransactions(limit: number): Promise<Transaction[]>;
+  addTransaction(req: AddTransactionRequest): Promise<Transaction>;
+}

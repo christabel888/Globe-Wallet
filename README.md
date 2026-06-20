@@ -46,6 +46,7 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 - [Environment Setup & Stellar Network Configuration (Issue #28)](docs/issue-28.md) - Environment variables, testnet vs mainnet setup, and key security rules.
 - [Mock Centralization (Issue #14)](docs/issue-14.md) - Centralized fixtures/data service, API contracts, test strategy, and rollout notes.
 - [Off-Ramp Payout Validation & Fee Calculation (Issue #21)](docs/issue-21.md) - Extracted utility functions for fee parsing, validation error codes, PayoutSummary component, and comprehensive test suite (>90% coverage).
+- [Transaction History: Persistent API, Sync & Tests (Issue #13)](docs/issue-13.md) - Paginated transactions API, sync service, MockDB enhancements, useTransactionHistory hook, and full test suite.
 
 [Continue working on v0 →](https://v0.app/chat/projects/prj_Z6moUc7brx5QzV1vPHQC842r9sYK)
 
