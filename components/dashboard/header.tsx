@@ -16,12 +16,16 @@ interface HeaderProps {
 
 export function Header({ title, description, actions }: HeaderProps) {
   return (
-    <header className="space-y-3 md:space-y-4 animate-slide-in-up">
+    <header
+      className="space-y-3 md:space-y-4 animate-slide-in-up"
+      aria-label="Dashboard header"
+      data-testid="dashboard-header"
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-1">
           <MobileNav />
 
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 max-w-md" role="search" aria-label="Dashboard search">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
               id="dashboard-search"
