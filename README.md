@@ -38,15 +38,18 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 ## Documentation
 
 - [Architecture Overview](docs/architecture.md) - Deep dive into the service-oriented architecture.
+- [Chart Recharts Strict Typing (Issue #17)](docs/issue-17.md) - Strict Recharts TypeScript types for chart components, API contracts, and test instructions.
 - [Enterprise Upgrade (Issue #27)](docs/issue-27.md) - Details on the v1.2.0 upgrade, including API contracts and design rationale.
 - [Send Form: Contact Selection & Confirmation (Issue #23)](docs/issue-23.md) - Two-step send flow, contact picker, API contracts, and test instructions.
 - [Developer Onboarding (Issue #29)](docs/issue-29.md) - Repo structure, conventions, testing strategy, and contributor guide.
 - [Accessibility Audit (Issue #24)](docs/issue-24.md) - Automated axe/pa11y checks for main pages, API contracts, and CI integration.
 - [E2E Testing: Core Wallet Flows (Issue #25)](docs/issue-25.md) - Playwright E2E journeys for receive, convert, off-ramp, savings, cards, and profile.
 - [Environment Setup & Stellar Network Configuration (Issue #28)](docs/issue-28.md) - Environment variables, testnet vs mainnet setup, and key security rules.
+- [Crypto-Native Send Flow: Federated Address Lookup (Issue #11)](docs/issue-11.md) - Stellar federation protocol support (SEP-0002), `AddressLookupBadge` component, `/api/federation` route, and full test coverage.
 - [Mock Centralization (Issue #14)](docs/issue-14.md) - Centralized fixtures/data service, API contracts, test strategy, and rollout notes.
 - [Enterprise-Grade Integration & Testability (Issue #19)](docs/issue-19.md) - Health check API, analytics service, enhanced input component, coverage dashboard, and expanded type system.
 - [Off-Ramp Payout Validation & Fee Calculation (Issue #21)](docs/issue-21.md) - Extracted utility functions for fee parsing, validation error codes, PayoutSummary component, and comprehensive test suite (>90% coverage).
+- [Chart & Analytics: Recharts Types, Data Pipeline & Tests (Issue #15)](docs/issue-15.md) - Hardened Recharts TypeScript types, analytics data pipeline, `GET /api/analytics` endpoint, `useAnalytics` hook, and full test suite (unit/component/integration/E2E).
 - [Transaction History: Persistent API, Sync & Tests (Issue #13)](docs/issue-13.md) - Paginated transactions API, sync service, MockDB enhancements, useTransactionHistory hook, and full test suite.
 
 [Continue working on v0 →](https://v0.app/chat/projects/prj_Z6moUc7brx5QzV1vPHQC842r9sYK)

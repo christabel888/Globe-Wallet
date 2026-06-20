@@ -44,8 +44,14 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
 
+    - name: Run E2E tests (issue #17 chart Recharts types)
+      run: 'npm run test:e2e -- --grep "Issue #17"'
+
     - name: Run E2E tests (issue #30 dashboard)
       run: 'npm run test:e2e -- --grep "Issue #30"'
+
+    - name: Run E2E tests (issue #11 federated send)
+      run: 'npm run test:e2e -- --grep "Issue #11"'
 
     - name: Run E2E tests (send flow)
       run: npm run test:e2e -- --grep "Send Flow"
@@ -64,6 +70,8 @@ jobs:
 
     - name: Run E2E tests (issue #16 app shell a11y)
       run: 'npm run test:e2e -- --grep "@shell-a11y"'
+    - name: Run E2E tests (issue #15 analytics)
+      run: 'npm run test:e2e -- --grep "@analytics"'
     - name: Run E2E tests (issue #13 transaction history)
       run: 'npm run test:e2e -- --grep "@transaction-history"'
 
@@ -112,10 +120,17 @@ jobs:
             "author": "${{ github.actor }}",
             "issue": 16,
             "issues": [14, 16, 21, 23, 24, 25, 28, 30],
+            "issue": 11,
+            "issues": [11, 14, 21, 23, 24, 25, 28, 30],
+            "issue": 17,
+            "issues": [14, 17, 21, 23, 24, 25, 28, 30],
+            "issue": 15,
+            "issues": [14, 15, 21, 23, 24, 25, 28, 30],
             "issue": 24,
             "issues": [14, 19, 21, 23, 24, 25, 28, 30],
             "status": "success",
             "coverage_verified": true,
             "fixture_coverage_verified": true,
-            "accessibility_verified": true
+            "accessibility_verified": true,
+            "federation_lookup_verified": true
           }'

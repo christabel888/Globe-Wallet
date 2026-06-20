@@ -75,6 +75,10 @@ export interface SendConfirmation {
   asset: AssetCode;
   memo?: string;
   estimatedFee: number;
+  /** Set when recipient was resolved from a federated address (e.g. "alice*stellar.org") */
+  federatedInput?: string;
+  /** Memo surfaced from the federation record, shown in summary */
+  federationMemo?: string;
 }
 
 /** Request body for /api/send */
@@ -362,6 +366,41 @@ export interface IFiatService {
   getAccountBalance(): number;
 }
 
+// ── Issue #11: Crypto-Native Send Flow / Federation Types ────────────────────
+
+/** Resolution states for a Stellar federated address lookup */
+export type AddressLookupStatus = 'idle' | 'resolving' | 'resolved' | 'not-found' | 'error'
+
+/** Result returned by the federation lookup hook and service */
+export interface AddressLookupResult {
+  status: AddressLookupStatus
+  /** The raw input string that was looked up */
+  input: string
+  /** The resolved G… Stellar public key (only when status === 'resolved') */
+  resolved?: string
+  /** Optional memo attached to the federation record */
+  federationMemo?: string
+  /** Human-readable error when status === 'error' */
+  error?: string
+}
+
+/** A resolved Stellar federated address record */
+export interface FederatedAddress {
+  /** Original user input, e.g. "alice*stellar.org" */
+  input: string
+  /** Resolved G… public key */
+  accountId: string
+  memo?: string
+  memoType?: 'text' | 'id' | 'hash'
+}
+
+export interface IFederationService {
+  /** Returns true if the input looks like a federated address (user*domain.tld) */
+  isFederated(input: string): boolean
+  /** Resolve a federated address string to a public key + optional memo */
+  lookup(federatedAddress: string): Promise<AddressLookupResult>
+}
+
 export interface MergeAnalyticsPayload {
   event: "merge";
   repository: string;
@@ -645,6 +684,64 @@ export interface IShellService {
   getNavItems(): NavItem[]
   getMainContentId(): string
   getSafeAreaInsets(): SafeAreaInsets
+// ── Chart Types (Issue #17) ──────────────────────────────────────────────────
+
+/** A single data point in the weekly activity bar chart. */
+export interface ChartDailyDataPoint {
+  /** Short day label, e.g. "M", "T", "W" */
+  day: string;
+  /** Activity percentage value 0–100 */
+  value: number;
+  /** Full day name shown in tooltip, e.g. "Monday" */
+  label: string;
+}
+
+/** A typed Recharts payload entry for bar chart tooltips. */
+export interface ChartTooltipEntry {
+  value: number;
+  dataKey: string;
+  name: string;
+  /** The underlying row object from `chartData` */
+  payload: ChartDailyDataPoint;
+  fill?: string;
+  color?: string;
+  unit?: string;
+}
+
+/** Props received by a custom Recharts tooltip content component. */
+export interface ActivityTooltipProps {
+  active?: boolean;
+  payload?: ChartTooltipEntry[];
+  label?: string;
+}
+
+/** Generic analytics chart data point. */
+export interface ChartAnalyticsEntry {
+  category: string;
+  value: number;
+  secondaryValue?: number;
+  meta?: Record<string, string | number>;
+}
+
+/** Configuration for a single chart series (bar, line, area). */
+export interface ChartSeriesConfig {
+  dataKey: string;
+  label: string;
+  color: string;
+  gradientId?: string;
+}
+
+/** Response from GET /api/analytics */
+export interface ChartAnalyticsApiResponse {
+  success: boolean;
+  data?: {
+    period: "week" | "month" | "year";
+    points: ChartDailyDataPoint[];
+    average: number;
+    peak: number;
+  };
+  error?: string;
+}
 // ── Transaction History API Types (Issue #13) ────────────────────────────────
 
 export interface TransactionsResponse {
