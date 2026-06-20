@@ -45,6 +45,7 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 - [Accessibility Audit (Issue #24)](docs/issue-24.md) - Automated axe/pa11y checks for main pages, API contracts, and CI integration.
 - [E2E Testing: Core Wallet Flows (Issue #25)](docs/issue-25.md) - Playwright E2E journeys for receive, convert, off-ramp, savings, cards, and profile.
 - [Environment Setup & Stellar Network Configuration (Issue #28)](docs/issue-28.md) - Environment variables, testnet vs mainnet setup, and key security rules.
+- [Crypto-Native Send Flow: Federated Address Lookup (Issue #11)](docs/issue-11.md) - Stellar federation protocol support (SEP-0002), `AddressLookupBadge` component, `/api/federation` route, and full test coverage.
 - [Mock Centralization (Issue #14)](docs/issue-14.md) - Centralized fixtures/data service, API contracts, test strategy, and rollout notes.
 - [Enterprise-Grade Integration & Testability (Issue #19)](docs/issue-19.md) - Health check API, analytics service, enhanced input component, coverage dashboard, and expanded type system.
 - [Off-Ramp Payout Validation & Fee Calculation (Issue #21)](docs/issue-21.md) - Extracted utility functions for fee parsing, validation error codes, PayoutSummary component, and comprehensive test suite (>90% coverage).
