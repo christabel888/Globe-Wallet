@@ -543,3 +543,46 @@ export interface IA11yService {
   getStandard(): A11yWcagStandard;
   auditPage(request: A11yAuditRequest): A11yAuditResponse;
 }
+
+// ── App Shell & Navigation Types (Issue #16) ─────────────────────────────────
+
+/** A single bottom-nav item descriptor */
+export interface NavItem {
+  label: string
+  href: string
+  /** Lucide icon name used for icon lookup */
+  iconName: string
+  /** Match only the exact path (default true) */
+  exact?: boolean
+}
+
+/** Full shell layout configuration */
+export interface AppShellConfig {
+  navItems: NavItem[]
+  mainContentId: string
+  skipLinkLabel: string
+  /** Whether to apply env(safe-area-inset-*) padding */
+  safeAreaEnabled: boolean
+}
+
+/** CSS env() values for each safe-area side */
+export interface SafeAreaInsets {
+  top: string
+  bottom: string
+  left: string
+  right: string
+}
+
+/** API response from GET /api/shell */
+export interface ShellConfigResponse {
+  success: boolean
+  config?: AppShellConfig
+  error?: string
+}
+
+export interface IShellService {
+  getConfig(): AppShellConfig
+  getNavItems(): NavItem[]
+  getMainContentId(): string
+  getSafeAreaInsets(): SafeAreaInsets
+}
