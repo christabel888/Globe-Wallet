@@ -543,3 +543,82 @@ export interface IA11yService {
   getStandard(): A11yWcagStandard;
   auditPage(request: A11yAuditRequest): A11yAuditResponse;
 }
+
+// ── Chart & Analytics Types (Issue #15) ──────────────────────────────────────
+
+export type ChartInterval = 'day' | 'week' | 'month' | 'year'
+
+export interface ChartDataPoint {
+  label: string
+  value: number
+  secondaryValue?: number
+  timestamp?: string
+}
+
+export interface ChartSeries {
+  key: string
+  label: string
+  color: string
+  data: ChartDataPoint[]
+}
+
+export type AnalyticsMetricId =
+  | 'transaction_volume'
+  | 'active_wallets'
+  | 'send_count'
+  | 'receive_count'
+  | 'conversion_rate'
+  | 'fee_total'
+
+export interface AnalyticsStat {
+  id: AnalyticsMetricId
+  title: string
+  value: string
+  numericValue: number
+  change: string
+  changePct: number
+  trend: 'up' | 'down' | 'flat'
+}
+
+export interface AnalyticsDashboard {
+  interval: ChartInterval
+  stats: AnalyticsStat[]
+  volumeHistory: ChartDataPoint[]
+  categoryBreakdown: { category: TransactionCategory; count: number; volume: number }[]
+  topAssets: { asset: AssetCode; volume: number; pct: number }[]
+}
+
+export interface AnalyticsRequest {
+  interval: ChartInterval
+  from?: string
+  to?: string
+}
+
+export interface AnalyticsResponse {
+  success: boolean
+  data?: AnalyticsDashboard
+  error?: string
+}
+
+export interface IAnalyticsService {
+  getDashboard(request: AnalyticsRequest): Promise<AnalyticsDashboard>
+  getVolumeHistory(interval: ChartInterval): ChartDataPoint[]
+  getCategoryBreakdown(transactions: Transaction[]): AnalyticsDashboard['categoryBreakdown']
+  computeStat(id: AnalyticsMetricId, transactions: Transaction[]): AnalyticsStat
+}
+
+/** Recharts-compatible tooltip payload entry, typed for internal chart use */
+export interface ChartTooltipPayloadEntry {
+  value: number
+  name: string
+  dataKey: string
+  color?: string
+  payload: ChartDataPoint
+}
+
+/** Props passed to a custom Recharts tooltip component */
+export interface ChartTooltipRenderProps {
+  active?: boolean
+  payload?: ChartTooltipPayloadEntry[]
+  label?: string
+}
