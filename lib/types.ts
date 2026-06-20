@@ -516,6 +516,66 @@ export interface PersistedWithdrawal {
 
 // ── Container Interface ──────────────────────────────────────────────────────
 
+
+
+// ── Issue #19: Enhanced Enterprise Types ──────────────────────────────────────
+
+/** Configuration for the analytics POST on merge events. */
+export interface MergeAnalyticsConfig {
+  url: string;
+  enabled: boolean;
+}
+
+/** Settings for test environment isolation. */
+export interface TestEnvironmentConfig {
+  mockApiDelay: number;
+  simulateErrors: boolean;
+  errorRate: number;
+}
+
+/** Represents a CI workflow step result. */
+export interface CIWorkflowStep {
+  name: string;
+  status: "success" | "failure" | "skipped";
+  durationMs: number;
+  output?: string;
+}
+
+/** Merge analytics payload for CI/CD pipeline tracking. */
+export interface MergeAnalyticsPayloadV2 {
+  event: "merge";
+  repository: string;
+  branch: string;
+  commit: string;
+  timestamp: string;
+  author: string;
+  issue: number;
+  issues: number[];
+  status: "success" | "failure";
+  coverage_verified: boolean;
+  fixture_coverage_verified: boolean;
+  accessibility_verified: boolean;
+  test_count: number;
+  pass_count: number;
+  fail_count: number;
+}
+
+/** API health check response type. */
+export interface HealthCheckResponse {
+  status: "healthy" | "degraded" | "unhealthy";
+  version: string;
+  uptime: number;
+  services: Record<string, "up" | "down">;
+}
+
+/** Generic paginated API response wrapper. */
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
 export interface IFinanceServiceContainer {
   wallet: IWalletService;
   pricing: IPricingService;
@@ -581,4 +641,135 @@ export interface IA11yService {
   getPages(): A11yPageConfig[];
   getStandard(): A11yWcagStandard;
   auditPage(request: A11yAuditRequest): A11yAuditResponse;
+}
+
+// ── Chart Types (Issue #17) ──────────────────────────────────────────────────
+
+/** A single data point in the weekly activity bar chart. */
+export interface ChartDailyDataPoint {
+  /** Short day label, e.g. "M", "T", "W" */
+  day: string;
+  /** Activity percentage value 0–100 */
+  value: number;
+  /** Full day name shown in tooltip, e.g. "Monday" */
+  label: string;
+}
+
+/** A typed Recharts payload entry for bar chart tooltips. */
+export interface ChartTooltipEntry {
+  value: number;
+  dataKey: string;
+  name: string;
+  /** The underlying row object from `chartData` */
+  payload: ChartDailyDataPoint;
+  fill?: string;
+  color?: string;
+  unit?: string;
+}
+
+/** Props received by a custom Recharts tooltip content component. */
+export interface ActivityTooltipProps {
+  active?: boolean;
+  payload?: ChartTooltipEntry[];
+  label?: string;
+}
+
+/** Generic analytics chart data point. */
+export interface ChartAnalyticsEntry {
+  category: string;
+  value: number;
+  secondaryValue?: number;
+  meta?: Record<string, string | number>;
+}
+
+/** Configuration for a single chart series (bar, line, area). */
+export interface ChartSeriesConfig {
+  dataKey: string;
+  label: string;
+  color: string;
+  gradientId?: string;
+}
+
+/** Response from GET /api/analytics */
+export interface ChartAnalyticsApiResponse {
+  success: boolean;
+  data?: {
+    period: "week" | "month" | "year";
+    points: ChartDailyDataPoint[];
+    average: number;
+    peak: number;
+  };
+  error?: string;
+}
+// ── Transaction History API Types (Issue #13) ────────────────────────────────
+
+export interface TransactionsResponse {
+  success: boolean;
+  data?: Transaction[];
+  error?: string;
+}
+
+export type TransactionSortField = 'date' | 'amount' | 'asset';
+export type TransactionSortOrder = 'asc' | 'desc';
+
+export interface TransactionFilters {
+  type?: TransactionDirection;
+  category?: TransactionCategory;
+  asset?: AssetCode;
+  status?: Transaction['status'];
+  from?: string;
+  to?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+  sortBy?: TransactionSortField;
+  sortOrder?: TransactionSortOrder;
+}
+
+export interface TransactionPage {
+  data: Transaction[];
+  total: number;
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export interface TransactionPageResponse {
+  success: boolean;
+  data?: TransactionPage;
+  error?: string;
+}
+
+export interface AddTransactionRequest {
+  type: Transaction['type'];
+  amount: number;
+  asset: AssetCode;
+  address: string;
+  category?: TransactionCategory;
+  name?: string;
+  detail?: string;
+  currency?: CurrencyCode;
+  stellarHash?: string;
+}
+
+export interface TransactionSyncStatus {
+  lastSyncAt: string | null;
+  isSyncing: boolean;
+  totalSynced: number;
+  pendingCount: number;
+}
+
+export interface TransactionSyncResult {
+  added: number;
+  updated: number;
+  failed: number;
+  lastSyncAt: string;
+}
+
+export interface ITransactionSyncService {
+  syncFromNetwork(): Promise<TransactionSyncResult>;
+  getLastSyncTime(): string | null;
+  getSyncStatus(): TransactionSyncStatus;
+  getRecentTransactions(limit: number): Promise<Transaction[]>;
+  addTransaction(req: AddTransactionRequest): Promise<Transaction>;
 }
