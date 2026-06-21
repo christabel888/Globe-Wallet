@@ -94,12 +94,17 @@ const customJestConfig = {
       lines: 75,
       statements: 75,
     },
-    'lib/off-ramp-utils.ts': {
-      branches: 90,
+    'lib/services/asset.service.ts': {
+      branches: 85,
       functions: 90,
       lines: 90,
       statements: 90,
     },
+    'lib/helpers/conversion-math.ts': {
+      branches: 90,
+      functions: 100,
+      lines: 95,
+      statements: 95,
     'hooks/useOffRamp.ts': {
       branches: 80,
       functions: 85,

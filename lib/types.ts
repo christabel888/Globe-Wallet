@@ -429,6 +429,46 @@ export interface IStellarService {
   getOffRampRate(currency: CurrencyCode): number;
 }
 
+// ── Convert Page Types (Issue #20) ──────────────────────────────────────────
+
+/**
+ * Represents a single exchange rate entry as used on the convert page.
+ * Mirrors the inline rate table in app/convert/page.tsx for testability.
+ */
+export interface ExchangeRateEntry {
+  from: string
+  to: string
+  rate: number
+  change24h: number
+}
+
+/**
+ * Encapsulates the full UI state of the convert page.
+ * Enables type-safe prop drilling and unit-testable state transitions.
+ */
+export interface ConversionState {
+  fromAmount: string
+  toAmount: string
+  fromCurrency: string
+  toCurrency: string
+  isLoading: boolean
+}
+
+/**
+ * Result returned by a conversion operation from the convert page.
+ * Carries enough context for analytics or transaction history entries.
+ */
+export interface ConversionResult {
+  fromAmount: number
+  toAmount: number
+  fromCurrency: string
+  toCurrency: string
+  rate: number
+  processingFeeRate: number
+  netReceived: number
+  timestamp: string
+}
+
 // ── Onboarding Types (Issue #29) ─────────────────────────────────────────────
 
 /** Tracks completion of developer onboarding steps for new contributors. */

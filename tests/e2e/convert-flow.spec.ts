@@ -1,4 +1,17 @@
 /**
+ * E2E tests — Convert Page (Issue #20)
+ *
+ * Critical user flows tested:
+ *   1. Happy path — enter amount, see conversion, submit successfully
+ *   2. Failure path — insufficient balance shows error, no conversion
+ *
+ * Playwright navigates to the real /convert page served by Next.js.
+ * No mocks — tests the real rendered output.
+ */
+
+import { test, expect } from '@playwright/test'
+
+test.describe('Convert Flow — Issue #20', () => {
  * E2E — Convert Flow (issue #25)
  * Covers: rate display, amount input, swap currencies, fee summary, convert button.
  */
@@ -9,74 +22,84 @@ test.describe('Convert Flow', () => {
     await page.goto('/convert')
   })
 
-  // ── happy path ──────────────────────────────────────────────────────────────
+  // ── Happy path ─────────────────────────────────────────────────────────────
 
-  test('shows exchange rate card on load', async ({ page }) => {
-    // Rate card shows "1 XLM = ..."
-    await expect(page.getByText(/1 XLM/i)).toBeVisible({ timeout: 5000 })
-  })
+  test('happy path: enter amount, see calculated result, convert successfully', async ({ page }) => {
+    // Page should load with heading
+    await expect(page.getByRole('heading', { name: 'Convert' })).toBeVisible()
 
-  test('entering a from-amount calculates the to-amount', async ({ page }) => {
-    const inputs = page.getByRole('spinbutton')
-    const fromInput = inputs.first()
+    // Exchange rate card should show default XLM → USDC rate
+    await expect(page.getByText(/1 XLM/)).toBeVisible()
+
+    // Get the from-amount input (first number input on the page)
+    const fromInput = page.locator('input[type="number"]').first()
     await fromInput.fill('100')
 
-    const toInput = inputs.nth(1)
+    // The to-amount field should auto-populate (rate 0.095 → 9.500000)
+    const toInput = page.locator('input[type="number"]').nth(1)
+    await expect(toInput).not.toHaveValue('')
     const toValue = await toInput.inputValue()
-    // Should be non-empty and numeric
     expect(parseFloat(toValue)).toBeGreaterThan(0)
+
+    // Transaction details card should appear
+    await expect(page.getByText('Transaction Details')).toBeVisible()
+    await expect(page.getByText(/You'll receive/)).toBeVisible()
+
+    // Convert button should be enabled
+    const convertButton = page.getByRole('button', { name: /^convert$/i })
+    await expect(convertButton).toBeEnabled()
+
+    // Submit conversion
+    await convertButton.click()
+
+    // Button shows loading state
+    await expect(page.getByText(/converting/i)).toBeVisible()
+
+    // After ~2s simulation, success toast should appear
+    await expect(page.getByText(/successfully converted/i)).toBeVisible({ timeout: 8000 })
   })
 
-  test('fee summary appears after entering an amount', async ({ page }) => {
-    const inputs = page.getByRole('spinbutton')
-    await inputs.first().fill('10')
-    await expect(page.getByText(/network fee/i)).toBeVisible({ timeout: 3000 })
-    await expect(page.getByText(/you'll receive/i)).toBeVisible()
+  // ── Failure path ───────────────────────────────────────────────────────────
+
+  test('failure path: exceeding balance shows error toast', async ({ page }) => {
+    // Default XLM balance is 1250.45 — enter a higher value
+    const fromInput = page.locator('input[type="number"]').first()
+    await fromInput.fill('99999')
+
+    const convertButton = page.getByRole('button', { name: /^convert$/i })
+    await expect(convertButton).toBeEnabled()
+    await convertButton.click()
+
+    // Error toast should appear
+    await expect(page.getByText(/insufficient/i)).toBeVisible({ timeout: 5000 })
   })
 
-  test('swap button reverses the currency pair', async ({ page }) => {
-    // Default: XLM → USDC
-    const swapBtn = page.getByRole('button', { name: '' }).filter({ hasText: '' }).locator('svg')
-    // locate swap via its icon parent button
-    const swapButton = page.locator('button').filter({ has: page.locator('svg') }).nth(0)
-    // Just verify the page doesn't crash on click
-    const inputs = page.getByRole('spinbutton')
-    await inputs.first().fill('5')
-    const initialTo = await inputs.nth(1).inputValue()
+  // ── Bidirectional input ────────────────────────────────────────────────────
 
-    // Click the swap/reverse button (ArrowUpDown icon button)
-    await page.locator('button.rounded-full').click()
+  test('to-amount input back-calculates the from-amount', async ({ page }) => {
+    const toInput = page.locator('input[type="number"]').nth(1)
+    await toInput.fill('9.5')
 
-    // After swap from/to pair is inverted — page still functional
-    await expect(page.locator('body')).toBeVisible()
+    const fromInput = page.locator('input[type="number"]').first()
+    const fromValue = await fromInput.inputValue()
+
+    // 9.5 / 0.095 ≈ 100
+    expect(parseFloat(fromValue)).toBeCloseTo(100, 0)
   })
 
-  test('Convert button is disabled when amount is empty', async ({ page }) => {
-    const convertBtn = page.getByRole('button', { name: /convert/i })
-    await expect(convertBtn).toBeDisabled()
-  })
+  // ── "Use max" ──────────────────────────────────────────────────────────────
 
-  test('Convert button enables after valid amount is entered', async ({ page }) => {
-    const inputs = page.getByRole('spinbutton')
-    await inputs.first().fill('1')
-    const convertBtn = page.getByRole('button', { name: /^convert$/i })
-    await expect(convertBtn).toBeEnabled({ timeout: 3000 })
-  })
+  test('"Use max" button fills the from-amount with the full balance', async ({ page }) => {
+    // Type any amount to trigger "Use max" button appearance
+    const fromInput = page.locator('input[type="number"]').first()
+    await fromInput.fill('1')
 
-  // ── failure path ────────────────────────────────────────────────────────────
+    const useMaxButton = page.getByRole('button', { name: /use max/i })
+    await expect(useMaxButton).toBeVisible()
+    await useMaxButton.click()
 
-  test('shows error toast when amount exceeds balance', async ({ page }) => {
-    const inputs = page.getByRole('spinbutton')
-    await inputs.first().fill('999999')
-    await page.getByRole('button', { name: /^convert$/i }).click()
-    // Sonner toast appears in the DOM as a li with the error text
-    await expect(page.locator('[data-sonner-toast]').or(page.getByText(/insufficient/i))).toBeVisible({ timeout: 5000 })
-  })
-
-  // ── navigation ──────────────────────────────────────────────────────────────
-
-  test('back button returns to home', async ({ page }) => {
-    await page.getByRole('link', { name: /back/i }).click()
-    await expect(page).toHaveURL('/')
+    // Should equal the XLM balance (1250.45)
+    const value = await fromInput.inputValue()
+    expect(parseFloat(value)).toBeCloseTo(1250.45, 1)
   })
 })

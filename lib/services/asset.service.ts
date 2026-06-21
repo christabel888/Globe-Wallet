@@ -7,7 +7,7 @@ export class AssetService implements IAssetService {
   private readonly cacheTTL = 60000
 
   getAssets(): CryptoAsset[] {
-    return [...MOCK_CRYPTO_ASSETS]
+    return MOCK_CRYPTO_ASSETS.map(a => ({ ...a }))
   }
 
   async getAssetPrice(code: AssetCode): Promise<number> {
