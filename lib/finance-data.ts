@@ -4,6 +4,7 @@
  */
 
 import { CurrencyCode, AssetCode, Wallet, CryptoAsset, Transaction, Contact, SavingsGoal, PaymentCard } from './types'
+import { TEST_STELLAR_ADDRESS, MOCK_STELLAR_ACCOUNT, MOCK_MEMO } from './fixtures/stellar'
 
 export const wallets: Wallet[] = [
   { id: 'w1', code: "NGN", name: "Nigerian Naira", balance: 1284500.75, color: "bg-green-500", changePct: 2.4, label: "NGN" },
@@ -75,12 +76,14 @@ export const cryptoAssets: CryptoAsset[] = [
   },
 ]
 
-export const TEST_STELLAR_ADDRESS = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
+// Re-exported from the canonical wallet fixture (lib/fixtures/stellar.ts) so the
+// receive flow has a single source of truth instead of a second, drifting literal.
+export { TEST_STELLAR_ADDRESS }
 
 export const stellarAccount = {
-  publicKey: TEST_STELLAR_ADDRESS,
-  memo: "STLP-2048",
-  network: "Stellar Public Network",
+  publicKey: MOCK_STELLAR_ACCOUNT.publicKey,
+  memo: MOCK_MEMO,
+  network: MOCK_STELLAR_ACCOUNT.network,
 }
 
 export const formatMoney = (amount: number, currency: CurrencyCode, hidden = false): string => {

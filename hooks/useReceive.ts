@@ -11,12 +11,13 @@ import {
 import { AssetCode, ReceiveQRData } from '../lib/types'
 
 export function useReceive() {
-  const { generateAddress, shortenKey } = useWallet()
+  const { generateAddress, validateAddress, shortenKey } = useWallet()
   const [amount, setAmount] = useState('')
   const [memo, setMemo] = useState('')
   const [amountError, setAmountError] = useState<string | null>(null)
 
   const address = generateAddress()
+  const hasAccount = Boolean(address) && validateAddress(address)
 
   const addressQR = useMemo(
     () => buildReceiveQRData(address, 'address'),
@@ -56,6 +57,7 @@ export function useReceive() {
 
   return {
     address,
+    hasAccount,
     shortenKey,
     amount,
     memo,

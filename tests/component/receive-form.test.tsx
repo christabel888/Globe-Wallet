@@ -149,4 +149,31 @@ describe('ReceiveForm — issue #22', () => {
     await user.click(screen.getByTestId('tab-request'))
     expect(screen.getByTestId('receive-request-card')).toBeInTheDocument()
   })
+
+  describe('dynamic wallet address — issue #7', () => {
+    it('renders the address the wallet service provides, not a hardcoded value', () => {
+      const dynamicAddress = 'GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBNQO'
+      mockWallet.generateReceiveAddress.mockReturnValue(dynamicAddress)
+
+      renderReceiveForm()
+
+      expect(screen.getByTestId('receive-address')).toHaveTextContent(dynamicAddress)
+      mockWallet.generateReceiveAddress.mockReturnValue(TEST_STELLAR_ADDRESS)
+    })
+
+    it('shows a fallback message when no account is available', () => {
+      mockWallet.generateReceiveAddress.mockReturnValue('')
+      mockWallet.validateAddress.mockReturnValue(false)
+
+      renderReceiveForm()
+
+      expect(screen.getByTestId('receive-no-account')).toHaveTextContent(
+        /no stellar account is available/i
+      )
+      expect(screen.queryByTestId('receive-address')).not.toBeInTheDocument()
+
+      mockWallet.generateReceiveAddress.mockReturnValue(TEST_STELLAR_ADDRESS)
+      mockWallet.validateAddress.mockReturnValue(true)
+    })
+  })
 })

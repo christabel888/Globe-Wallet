@@ -27,6 +27,7 @@ async function shareText(title: string, text: string, fallbackLabel: string) {
 export function ReceiveForm() {
   const {
     address,
+    hasAccount,
     amount,
     memo,
     amountError,
@@ -36,6 +37,16 @@ export function ReceiveForm() {
     setMemo,
     getShareText,
   } = useReceive()
+
+  if (!hasAccount) {
+    return (
+      <Card className="p-6" data-testid="receive-no-account">
+        <p className="py-10 text-center text-sm text-muted-foreground">
+          No Stellar account is available yet. Connect or create a wallet to receive XLM.
+        </p>
+      </Card>
+    )
+  }
 
   return (
     <Tabs defaultValue="address" className="w-full" data-testid="receive-tabs">
