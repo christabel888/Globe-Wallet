@@ -3,7 +3,7 @@
  * Expanded and synced with architecture.md, issue-18.md, and all service layers.
  */
 
-export type AssetCode = "XLM" | "USDC" | "USDT" | "NGN" | "USD" | "EUR";
+export type AssetCode = "XLM" | "USDC" | "USDT";
 export type CurrencyCode = "NGN" | "USD" | "EUR" | "GBP";
 export type TransactionDirection = "in" | "out";
 
