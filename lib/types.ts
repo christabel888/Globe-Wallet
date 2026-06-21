@@ -75,6 +75,10 @@ export interface SendConfirmation {
   asset: AssetCode;
   memo?: string;
   estimatedFee: number;
+  /** Set when recipient was resolved from a federated address (e.g. "alice*stellar.org") */
+  federatedInput?: string;
+  /** Memo surfaced from the federation record, shown in summary */
+  federationMemo?: string;
 }
 
 /** Request body for /api/send */
@@ -112,6 +116,52 @@ export interface OffRampResponse {
     hash?: string;
   };
   error?: string;
+}
+
+/** Payment request fields for receive / QR generation */
+export interface PaymentRequest {
+  address: string
+  amount?: string
+  memo?: string
+  asset?: AssetCode
+}
+
+/** QR payload for address-only or payment-request tabs */
+export interface ReceiveQRData {
+  value: string
+  type: 'address' | 'payment-request'
+  address: string
+  amount?: string
+  memo?: string
+}
+
+/** Response from GET /api/receive */
+export interface ReceiveAddressResponse {
+  success: boolean
+  address?: string
+  error?: string
+}
+
+/** Request body for POST /api/receive (payment request) */
+export interface PaymentRequestPayload {
+  amount?: string
+  memo?: string
+  asset?: AssetCode
+}
+
+/** Response from POST /api/receive */
+export interface PaymentRequestResponse {
+  success: boolean
+  address?: string
+  qrValue?: string
+  shareText?: string
+  error?: string
+}
+
+/** Result of client-side payment amount validation */
+export interface PaymentAmountValidation {
+  valid: boolean
+  error?: string
 }
 
 export interface SavingsGoal {
@@ -316,6 +366,41 @@ export interface IFiatService {
   getAccountBalance(): number;
 }
 
+// ── Issue #11: Crypto-Native Send Flow / Federation Types ────────────────────
+
+/** Resolution states for a Stellar federated address lookup */
+export type AddressLookupStatus = 'idle' | 'resolving' | 'resolved' | 'not-found' | 'error'
+
+/** Result returned by the federation lookup hook and service */
+export interface AddressLookupResult {
+  status: AddressLookupStatus
+  /** The raw input string that was looked up */
+  input: string
+  /** The resolved G… Stellar public key (only when status === 'resolved') */
+  resolved?: string
+  /** Optional memo attached to the federation record */
+  federationMemo?: string
+  /** Human-readable error when status === 'error' */
+  error?: string
+}
+
+/** A resolved Stellar federated address record */
+export interface FederatedAddress {
+  /** Original user input, e.g. "alice*stellar.org" */
+  input: string
+  /** Resolved G… public key */
+  accountId: string
+  memo?: string
+  memoType?: 'text' | 'id' | 'hash'
+}
+
+export interface IFederationService {
+  /** Returns true if the input looks like a federated address (user*domain.tld) */
+  isFederated(input: string): boolean
+  /** Resolve a federated address string to a public key + optional memo */
+  lookup(federatedAddress: string): Promise<AddressLookupResult>
+}
+
 export interface MergeAnalyticsPayload {
   event: "merge";
   repository: string;
@@ -414,8 +499,123 @@ export interface DeveloperProfile {
   advancedMode: boolean;
 }
 
+// ── Off-Ramp Validation Types (Issue #21) ────────────────────────────────────
+
+export type WithdrawalErrorCode =
+  | "INVALID_AMOUNT"
+  | "NO_PAYMENT_METHOD"
+  | "INSUFFICIENT_BALANCE"
+  | "BELOW_MIN_LIMIT"
+  | "ABOVE_MAX_LIMIT"
+  | "METHOD_DISABLED"
+  | "METHOD_NOT_FOUND"
+  | "UNKNOWN_ASSET";
+
+/** Result of validating a withdrawal request. */
+export interface WithdrawalValidationResult {
+  valid: boolean;
+  errorCode?: WithdrawalErrorCode;
+  errorMessage?: string;
+}
+
+/** Full breakdown of a payout calculation. */
+export interface PayoutBreakdown {
+  cryptoAmount: number;
+  asset: string;
+  usdValue: number;
+  feeAmount: number;
+  fixedFee: number;
+  percentFee: number;
+  netPayout: number;
+  paymentMethodId: string;
+}
+
+/** UI-level payment method (as used in the off-ramp page). */
+export interface UIPaymentMethod {
+  id: string;
+  type: "bank" | "card";
+  name: string;
+  details: string;
+  fees: string;
+  processingTime: string;
+  limits: { min: number; max: number };
+  enabled: boolean;
+}
+
+/** State persisted to localStorage for the last withdrawal. */
+export interface PersistedWithdrawal {
+  methodId: string;
+  methodName: string;
+  asset: string;
+  amount: number;
+  fiatAmount: number;
+  status: "completed" | "pending" | "failed";
+  hash?: string;
+  date: string;
+}
+
 // ── Container Interface ──────────────────────────────────────────────────────
 
+
+
+// ── Issue #19: Enhanced Enterprise Types ──────────────────────────────────────
+
+/** Configuration for the analytics POST on merge events. */
+export interface MergeAnalyticsConfig {
+  url: string;
+  enabled: boolean;
+}
+
+/** Settings for test environment isolation. */
+export interface TestEnvironmentConfig {
+  mockApiDelay: number;
+  simulateErrors: boolean;
+  errorRate: number;
+}
+
+/** Represents a CI workflow step result. */
+export interface CIWorkflowStep {
+  name: string;
+  status: "success" | "failure" | "skipped";
+  durationMs: number;
+  output?: string;
+}
+
+/** Merge analytics payload for CI/CD pipeline tracking. */
+export interface MergeAnalyticsPayloadV2 {
+  event: "merge";
+  repository: string;
+  branch: string;
+  commit: string;
+  timestamp: string;
+  author: string;
+  issue: number;
+  issues: number[];
+  status: "success" | "failure";
+  coverage_verified: boolean;
+  fixture_coverage_verified: boolean;
+  accessibility_verified: boolean;
+  test_count: number;
+  pass_count: number;
+  fail_count: number;
+}
+
+/** API health check response type. */
+export interface HealthCheckResponse {
+  status: "healthy" | "degraded" | "unhealthy";
+  version: string;
+  uptime: number;
+  services: Record<string, "up" | "down">;
+}
+
+/** Generic paginated API response wrapper. */
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
 export interface IFinanceServiceContainer {
   wallet: IWalletService;
   pricing: IPricingService;
@@ -427,4 +627,230 @@ export interface IFinanceServiceContainer {
   // Legacy compatibility
   asset: IAssetService;
   stellar: IStellarService;
+}
+
+// ── Accessibility Audit (Issue #24) ─────────────────────────────────────────
+
+export type A11yImpactLevel = "critical" | "serious" | "moderate" | "minor" | "unknown";
+
+export type A11yWcagStandard = "WCAG2A" | "WCAG2AA" | "WCAG2AAA";
+
+export interface A11yPageConfig {
+  path: string;
+  label: string;
+  critical: boolean;
+}
+
+export interface A11yViolationNode {
+  html: string;
+  target: string;
+}
+
+export interface A11yViolation {
+  id: string;
+  impact: A11yImpactLevel;
+  description: string;
+  help: string;
+  helpUrl: string;
+  nodes: A11yViolationNode[];
+}
+
+export interface A11yAuditSummary {
+  pagePath: string;
+  violationCount: number;
+  byImpact: Record<A11yImpactLevel, number>;
+  passed: boolean;
+  scannedAt: string;
+}
+
+export interface A11yAuditRequest {
+  path: string;
+  minImpact?: A11yImpactLevel;
+}
+
+export interface A11yAuditResponse {
+  success: boolean;
+  path: string;
+  standard: A11yWcagStandard;
+  summary: A11yAuditSummary;
+  violations: A11yViolation[];
+  error?: string;
+}
+
+export interface IA11yService {
+  getPages(): A11yPageConfig[];
+  getStandard(): A11yWcagStandard;
+  auditPage(request: A11yAuditRequest): A11yAuditResponse;
+}
+
+// ── App Shell & Navigation Types (Issue #16) ─────────────────────────────────
+
+/** A single bottom-nav item descriptor */
+export interface NavItem {
+  label: string
+  href: string
+  /** Lucide icon name used for icon lookup */
+  iconName: string
+  /** Match only the exact path (default true) */
+  exact?: boolean
+}
+
+/** Full shell layout configuration */
+export interface AppShellConfig {
+  navItems: NavItem[]
+  mainContentId: string
+  skipLinkLabel: string
+  /** Whether to apply env(safe-area-inset-*) padding */
+  safeAreaEnabled: boolean
+}
+
+/** CSS env() values for each safe-area side */
+export interface SafeAreaInsets {
+  top: string
+  bottom: string
+  left: string
+  right: string
+}
+
+/** API response from GET /api/shell */
+export interface ShellConfigResponse {
+  success: boolean
+  config?: AppShellConfig
+  error?: string
+}
+
+export interface IShellService {
+  getConfig(): AppShellConfig
+  getNavItems(): NavItem[]
+  getMainContentId(): string
+  getSafeAreaInsets(): SafeAreaInsets
+// ── Chart Types (Issue #17) ──────────────────────────────────────────────────
+
+/** A single data point in the weekly activity bar chart. */
+export interface ChartDailyDataPoint {
+  /** Short day label, e.g. "M", "T", "W" */
+  day: string;
+  /** Activity percentage value 0–100 */
+  value: number;
+  /** Full day name shown in tooltip, e.g. "Monday" */
+  label: string;
+}
+
+/** A typed Recharts payload entry for bar chart tooltips. */
+export interface ChartTooltipEntry {
+  value: number;
+  dataKey: string;
+  name: string;
+  /** The underlying row object from `chartData` */
+  payload: ChartDailyDataPoint;
+  fill?: string;
+  color?: string;
+  unit?: string;
+}
+
+/** Props received by a custom Recharts tooltip content component. */
+export interface ActivityTooltipProps {
+  active?: boolean;
+  payload?: ChartTooltipEntry[];
+  label?: string;
+}
+
+/** Generic analytics chart data point. */
+export interface ChartAnalyticsEntry {
+  category: string;
+  value: number;
+  secondaryValue?: number;
+  meta?: Record<string, string | number>;
+}
+
+/** Configuration for a single chart series (bar, line, area). */
+export interface ChartSeriesConfig {
+  dataKey: string;
+  label: string;
+  color: string;
+  gradientId?: string;
+}
+
+/** Response from GET /api/analytics */
+export interface ChartAnalyticsApiResponse {
+  success: boolean;
+  data?: {
+    period: "week" | "month" | "year";
+    points: ChartDailyDataPoint[];
+    average: number;
+    peak: number;
+  };
+  error?: string;
+}
+// ── Transaction History API Types (Issue #13) ────────────────────────────────
+
+export interface TransactionsResponse {
+  success: boolean;
+  data?: Transaction[];
+  error?: string;
+}
+
+export type TransactionSortField = 'date' | 'amount' | 'asset';
+export type TransactionSortOrder = 'asc' | 'desc';
+
+export interface TransactionFilters {
+  type?: TransactionDirection;
+  category?: TransactionCategory;
+  asset?: AssetCode;
+  status?: Transaction['status'];
+  from?: string;
+  to?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+  sortBy?: TransactionSortField;
+  sortOrder?: TransactionSortOrder;
+}
+
+export interface TransactionPage {
+  data: Transaction[];
+  total: number;
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export interface TransactionPageResponse {
+  success: boolean;
+  data?: TransactionPage;
+  error?: string;
+}
+
+export interface AddTransactionRequest {
+  type: Transaction['type'];
+  amount: number;
+  asset: AssetCode;
+  address: string;
+  category?: TransactionCategory;
+  name?: string;
+  detail?: string;
+  currency?: CurrencyCode;
+  stellarHash?: string;
+}
+
+export interface TransactionSyncStatus {
+  lastSyncAt: string | null;
+  isSyncing: boolean;
+  totalSynced: number;
+  pendingCount: number;
+}
+
+export interface TransactionSyncResult {
+  added: number;
+  updated: number;
+  failed: number;
+  lastSyncAt: string;
+}
+
+export interface ITransactionSyncService {
+  syncFromNetwork(): Promise<TransactionSyncResult>;
+  getLastSyncTime(): string | null;
+  getSyncStatus(): TransactionSyncStatus;
+  getRecentTransactions(limit: number): Promise<Transaction[]>;
+  addTransaction(req: AddTransactionRequest): Promise<Transaction>;
 }

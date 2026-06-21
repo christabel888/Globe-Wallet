@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CryptoConverter } from '../../components/finance/CryptoConverter'
 import { FinanceServicesProvider } from '../../hooks/useFinanceServices'
@@ -63,7 +63,7 @@ describe('CryptoConverter', () => {
   })
 
   it('should handle amount input', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithServices(<CryptoConverter />)
 
     const amountInput = screen.getByTestId('amount-input')
@@ -73,7 +73,7 @@ describe('CryptoConverter', () => {
   })
 
   it('should swap assets when swap button is clicked', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithServices(<CryptoConverter />)
 
     const swapButton = screen.getByTestId('swap-button')
@@ -82,7 +82,7 @@ describe('CryptoConverter', () => {
   })
 
   it('should perform conversion', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     mockAssetService.convertAsset.mockResolvedValue(98)
     renderWithServices(<CryptoConverter />)
 

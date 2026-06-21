@@ -248,10 +248,12 @@ export default function OffRampPage() {
   return (
     <AppShell>
       <div className="flex items-center gap-4 p-4 pb-2">
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+        <Link
+          href="/"
+          aria-label="Go back to home"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Link>
         <h1 className="text-lg font-semibold">Cash Out</h1>
       </div>
@@ -286,7 +288,7 @@ export default function OffRampPage() {
                       />
                     </div>
                     <Select value={currency} onValueChange={setCurrency}>
-                      <SelectTrigger className="w-24">
+                      <SelectTrigger className="w-24" aria-label="Withdrawal currency">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -327,17 +329,26 @@ export default function OffRampPage() {
                 <Label>Payment method</Label>
                 <div className="space-y-3">
                   {paymentMethods.map((method) => (
-                    <div
+                    <label
                       key={method.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      className={`p-4 border rounded-lg cursor-pointer transition-all block ${
                         paymentMethod === method.id
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-primary/50"
                       } ${!method.enabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                      onClick={() =>
-                        method.enabled && setPaymentMethod(method.id)
-                      }
                     >
+                      <input
+                        type="radio"
+                        name="payment-method"
+                        value={method.id}
+                        checked={paymentMethod === method.id}
+                        onChange={() =>
+                          method.enabled && persistSelectedMethod(method.id)
+                        }
+                        disabled={!method.enabled}
+                        className="sr-only"
+                        aria-label={`Select ${method.name} - ${method.details}`}
+                      />
                       <div className="flex items-start gap-3">
                         <div className="mt-1">
                           {method.type === "bank" ? (
@@ -371,7 +382,7 @@ export default function OffRampPage() {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </label>
                   ))}
                 </div>
               </div>

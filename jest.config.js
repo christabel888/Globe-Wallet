@@ -4,10 +4,16 @@ const createJestConfig = nextJest({
   dir: './',
 })
 
+/** @type {import('jest').Config} */
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
+  coverageProvider: 'v8',
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/', '<rootDir>/tests/e2e/'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  moduleNameMapper: {
+    '^.+\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+  },
   collectCoverageFrom: [
     'lib/**/*.{js,jsx,ts,tsx}',
     'hooks/**/*.{js,jsx,ts,tsx}',
@@ -45,6 +51,18 @@ const customJestConfig = {
       functions: 80,
       lines: 85,
       statements: 85,
+    },
+    'lib/receive-utils.ts': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    'lib/services/receive.service.ts': {
+      branches: 80,
+      functions: 90,
+      lines: 90,
+      statements: 90,
     },
     'app/api/transactions/route.ts': {
       branches: 75,
@@ -87,8 +105,15 @@ const customJestConfig = {
       functions: 100,
       lines: 95,
       statements: 95,
+    'hooks/useOffRamp.ts': {
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85,
     },
   },
 }
 
-module.exports = createJestConfig(customJestConfig)
+module.exports = async () => ({
+  ...(await createJestConfig(customJestConfig)()),
+})

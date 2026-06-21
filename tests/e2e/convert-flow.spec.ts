@@ -12,6 +12,12 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Convert Flow — Issue #20', () => {
+ * E2E — Convert Flow (issue #25)
+ * Covers: rate display, amount input, swap currencies, fee summary, convert button.
+ */
+import { test, expect } from '@playwright/test'
+
+test.describe('Convert Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/convert')
   })

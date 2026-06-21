@@ -1,58 +1,22 @@
 "use client"
 
-import { useState } from "react"
 import { AppShell } from "@/components/app/app-shell"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Copy, Share, ArrowLeft, QrCode } from "lucide-react"
-import { QRCodeSVG } from "qrcode.react"
-import Link from "next/link"
-import { toast } from "sonner"
+import { PageHeader } from "@/components/app/page-header"
+import { ReceiveForm } from "@/components/app/receive-form"
 
 export default function ReceivePage() {
-  const [amount, setAmount] = useState("")
-  const [memo, setMemo] = useState("")
-  
-  // Mock Stellar address - in real app this would come from wallet
-  const stellarAddress = "GCKFBEIYTKP33HLSB67JDDK6HDKZGSPNGDHCYE6ZDEJ7JBQQTGXCUO7D"
-  
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success(`${label} copied to clipboard`)
-  }
-  
-  const shareAddress = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'My Stellar Address',
-        text: `Send XLM to: ${stellarAddress}`,
-      })
-    } else {
-      copyToClipboard(stellarAddress, "Address")
-    }
-  }
-  
-  const generatePaymentQR = () => {
-    let qrData = stellarAddress
-    if (amount) {
-      qrData += `?amount=${amount}`
-    }
-    if (memo) {
-      qrData += `${amount ? '&' : '?'}memo=${encodeURIComponent(memo)}`
-    }
-    return qrData
-  }
-
   return (
     <AppShell>
+      <PageHeader title="Receive XLM" back="/" />
+      <div className="px-4 pb-4" data-testid="receive-page">
+        <ReceiveForm />
       <div className="flex items-center gap-4 p-4 pb-2">
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+        <Link
+          href="/"
+          aria-label="Go back to home"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Link>
         <h1 className="text-lg font-semibold">Receive XLM</h1>
       </div>
@@ -69,11 +33,13 @@ export default function ReceivePage() {
               <div className="text-center space-y-4">
                 <div className="flex justify-center">
                   <div className="p-4 bg-white rounded-2xl">
-                    <QRCodeSVG 
-                      value={stellarAddress} 
+                    <QRCodeSVG
+                      value={stellarAddress}
                       size={160}
                       level="M"
                       includeMargin={false}
+                      title="QR code for Stellar receive address"
+                      aria-label="QR code for Stellar receive address"
                     />
                   </div>
                 </div>
@@ -158,11 +124,13 @@ export default function ReceivePage() {
                 <div className="text-center space-y-4">
                   <div className="flex justify-center">
                     <div className="p-4 bg-white rounded-2xl">
-                      <QRCodeSVG 
-                        value={generatePaymentQR()} 
+                      <QRCodeSVG
+                        value={generatePaymentQR()}
                         size={160}
                         level="M"
                         includeMargin={false}
+                        title="QR code for payment request"
+                        aria-label="QR code for payment request"
                       />
                     </div>
                   </div>
