@@ -41,6 +41,56 @@ describe('receive-utils', () => {
       })
       expect(uri).toContain('asset_code=USDC')
     })
+
+    it('omits malformed amounts instead of embedding invalid QR data', () => {
+      const uri = buildPaymentRequestQR({
+        address: TEST_STELLAR_ADDRESS,
+        amount: '10abc',
+      })
+      expect(uri).toBe(`web+stellar:pay?destination=${TEST_STELLAR_ADDRESS}`)
+      expect(uri).not.toContain('amount=')
+    })
+
+    it('omits amounts with separators or more than 7 decimal places', () => {
+      expect(
+        buildPaymentRequestQR({ address: TEST_STELLAR_ADDRESS, amount: '1,000' })
+      ).not.toContain('amount=')
+      expect(
+        buildPaymentRequestQR({ address: TEST_STELLAR_ADDRESS, amount: '1.123456789' })
+      ).not.toContain('amount=')
+    })
+
+    it('omits non-positive or out-of-range amounts', () => {
+      expect(
+        buildPaymentRequestQR({ address: TEST_STELLAR_ADDRESS, amount: '0' })
+      ).not.toContain('amount=')
+      expect(
+        buildPaymentRequestQR({ address: TEST_STELLAR_ADDRESS, amount: '-5' })
+      ).not.toContain('amount=')
+      expect(
+        buildPaymentRequestQR({ address: TEST_STELLAR_ADDRESS, amount: '1000000001' })
+      ).not.toContain('amount=')
+    })
+
+    it('omits memos that exceed the SEP-0007 28-byte MEMO_TEXT limit', () => {
+      const uri = buildPaymentRequestQR({
+        address: TEST_STELLAR_ADDRESS,
+        memo: 'this memo is far too long for stellar',
+      })
+      expect(uri).not.toContain('memo=')
+      expect(uri).not.toContain('memo_type=')
+    })
+
+    it('keeps a well-formed amount and memo together', () => {
+      const uri = buildPaymentRequestQR({
+        address: TEST_STELLAR_ADDRESS,
+        amount: '25.1234567',
+        memo: 'Invoice 42',
+      })
+      expect(uri).toContain('amount=25.1234567')
+      expect(uri).toContain('memo_type=text')
+      expect(uri).toContain('memo=Invoice')
+    })
   })
 
   describe('formatPaymentRequestShareText', () => {
