@@ -92,7 +92,6 @@ jobs:
       run: 'npm run test:e2e -- --grep "Health Check API"'
 
   merge-analytics:
-  merge-analytics:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: test
@@ -118,16 +117,8 @@ jobs:
             "commit": "${{ github.sha }}",
             "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",
             "author": "${{ github.actor }}",
-            "issue": 16,
-            "issues": [14, 16, 21, 23, 24, 25, 28, 30],
-            "issue": 11,
-            "issues": [11, 14, 21, 23, 24, 25, 28, 30],
-            "issue": 17,
-            "issues": [14, 17, 21, 23, 24, 25, 28, 30],
-            "issue": 15,
-            "issues": [14, 15, 21, 23, 24, 25, 28, 30],
             "issue": 24,
-            "issues": [14, 19, 21, 23, 24, 25, 28, 30],
+            "issues": [11, 14, 15, 16, 17, 19, 21, 23, 24, 25, 28, 30],
             "status": "success",
             "coverage_verified": true,
             "fixture_coverage_verified": true,

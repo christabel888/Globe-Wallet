@@ -1,4 +1,15 @@
-import type { AssetCode } from '../types'
+import type { AssetCode, CurrencyCode } from '../types'
+
+// Canonical off-ramp fiat rates. Single source of truth — previously
+// duplicated (and diverging) between stellar.service.ts and
+// off-ramp.service.ts, which meant the quote a user saw depended on
+// which code path ran, and GBP was silently missing from the live path.
+export const OFF_RAMP_RATES: Record<CurrencyCode, number> = {
+  NGN: 1500.0,
+  USD: 1.0,
+  EUR: 0.92,
+  GBP: 1.27,
+}
 
 export const MOCK_CONVERSION_RATES: Record<AssetCode, Record<AssetCode, number>> = {
   XLM: { XLM: 1, USDC: 0.1185, USDT: 0.1184, NGN: 177.75, USD: 0.1185, EUR: 0.109 },
