@@ -1,13 +1,6 @@
 import { IStellarService, StellarAccount, OffRampMethod, CurrencyCode, StellarServiceError } from '../types'
-import { MOCK_STELLAR_ACCOUNT, TEST_STELLAR_ADDRESS, MOCK_MEMO } from '../fixtures'
+import { MOCK_STELLAR_ACCOUNT, TEST_STELLAR_ADDRESS, MOCK_MEMO, OFF_RAMP_RATES } from '../fixtures'
 import { formatAddress } from '../helpers/format'
-
-const OFF_RAMP_RATES: Record<CurrencyCode, number> = {
-  NGN: 1580.5,
-  USD: 1,
-  GBP: 0.79,
-  EUR: 0.92,
-}
 
 export class StellarService implements IStellarService {
   getAccountInfo(): StellarAccount {
