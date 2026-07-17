@@ -12,6 +12,8 @@
  * All functions are tested in isolation — no service or React imports.
  */
 
+import fc from 'fast-check'
+import Decimal from 'decimal.js'
 import {
   applyConversionRate,
   applyReverseRate,
@@ -239,15 +241,45 @@ describe('formatConversionRate', () => {
   it('formats rate to 6 decimal places', () => {
     const result = formatConversionRate('XLM', 'USDC', 0.095)
     expect(result).toBe('1 XLM = 0.095000 USDC')
-  })
+  }
 
   it('handles rate of 1', () => {
     const result = formatConversionRate('USDC', 'USDT', 1)
     expect(result).toBe('1 USDC = 1.000000 USDT')
-  })
+  }
 
   it('formats large rates correctly', () => {
     const result = formatConversionRate('USDC', 'XLM', 10.53)
     expect(result).toContain('10.530000')
+  })
+})
+
+// ─── Property-Based Tests: Round-Trip Conversion ─────────────────────────────
+
+describe('Round-Trip Conversion Property', () => {
+  it('should round-trip correctly for various amounts and rates', () => {
+    fc.assert(
+      fc.property(
+        // Generate valid fromAmountStr: up to 10 digits before decimal, up to 6 after
+        fc.stringMatching(/^\d{1,10}(\.\d{1,6})?$/),
+        // Generate valid rate: positive, not too small to avoid division by zero issues
+        fc.double({ min: 0.0001, max: 10000, noNaN: true, noInfinity: true }),
+        (fromAmountStr, rate) => {
+          // Skip empty string as it returns early
+          if (!fromAmountStr) return true
+          
+          // Perform round-trip conversion
+          const toAmount = deriveToAmount(fromAmountStr, rate)
+          const roundTripped = deriveFromAmount(toAmount, rate)
+
+          // Original with exactly 6 decimal places for comparison
+          const originalWith6dp = new Decimal(fromAmountStr).toFixed(6)
+
+          // The round-tripped amount should equal the original formatted to 6dp
+          expect(roundTripped).toBe(originalWith6dp)
+        }
+      ),
+      { numRuns: 1000 }
+    )
   })
 })

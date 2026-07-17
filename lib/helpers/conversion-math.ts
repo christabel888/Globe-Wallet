@@ -1,3 +1,5 @@
+import Decimal from 'decimal.js'
+
 /**
  * lib/helpers/conversion-math.ts — Issue #20
  *
@@ -32,7 +34,7 @@ export interface ExchangeRate {
  *   applyConversionRate(100, 0.095) // 9.5
  */
 export function applyConversionRate(amount: number, rate: number): number {
-  return amount * rate
+  return new Decimal(amount).times(rate).toNumber()
 }
 
 // ── applyReverseRate ──────────────────────────────────────────────────────────
@@ -49,7 +51,7 @@ export function applyConversionRate(amount: number, rate: number): number {
  *   applyReverseRate(9.5, 0.095) // ≈ 100
  */
 export function applyReverseRate(toAmount: number, rate: number): number {
-  return toAmount / rate
+  return new Decimal(toAmount).div(rate).toNumber()
 }
 
 // ── applyProcessingFee ────────────────────────────────────────────────────────
@@ -67,7 +69,7 @@ export function applyReverseRate(toAmount: number, rate: number): number {
  */
 export function applyProcessingFee(amount: number, feeRate = 0.001): number {
   if (!Number.isFinite(amount)) return amount
-  return Math.max(0, amount * (1 - feeRate))
+  return Math.max(0, new Decimal(amount).times(1 - feeRate).toNumber())
 }
 
 // ── deriveToAmount ────────────────────────────────────────────────────────────
@@ -86,9 +88,9 @@ export function applyProcessingFee(amount: number, feeRate = 0.001): number {
  */
 export function deriveToAmount(fromAmountStr: string, rate: number): string {
   if (!fromAmountStr || !rate) return ''
-  const num = parseFloat(fromAmountStr)
-  if (isNaN(num)) return ''
-  return (num * rate).toFixed(6)
+  const num = new Decimal(fromAmountStr)
+  if (num.isNaN()) return ''
+  return num.times(rate).toFixed(6)
 }
 
 // ── deriveFromAmount ──────────────────────────────────────────────────────────
@@ -107,9 +109,9 @@ export function deriveToAmount(fromAmountStr: string, rate: number): string {
  */
 export function deriveFromAmount(toAmountStr: string, rate: number): string {
   if (!toAmountStr || !rate) return ''
-  const num = parseFloat(toAmountStr)
-  if (isNaN(num)) return ''
-  return (num / rate).toFixed(6)
+  const num = new Decimal(toAmountStr)
+  if (num.isNaN()) return ''
+  return num.div(rate).toFixed(6)
 }
 
 // ── lookupRate ────────────────────────────────────────────────────────────────
@@ -151,9 +153,9 @@ export function calculateNetReceived(
   feeRate = 0.001,
 ): number {
   if (!toAmountStr) return 0
-  const num = parseFloat(toAmountStr)
-  if (isNaN(num)) return 0
-  return applyProcessingFee(num, feeRate)
+  const num = new Decimal(toAmountStr)
+  if (num.isNaN()) return 0
+  return applyProcessingFee(num.toNumber(), feeRate)
 }
 
 // ── formatConversionRate ──────────────────────────────────────────────────────
