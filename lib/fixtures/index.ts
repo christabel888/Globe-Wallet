@@ -1,7 +1,7 @@
 export { MOCK_BALANCES, MOCK_TOTAL_USD_VALUE } from './balances'
 export { MOCK_TRANSACTIONS, MOCK_TRANSACTIONS_COMPACT } from './transactions'
 export { MOCK_WALLETS, CURRENCY_SYMBOLS } from './wallets'
-export { MOCK_CRYPTO_ASSETS } from './assets'
+export { MOCK_CRYPTO_ASSETS, SUPPORTED_STELLAR_ASSETS } from './assets'
 export { MOCK_CONTACTS } from './contacts'
 export { MOCK_CONVERSION_RATES, MOCK_SIMPLE_RATES, MOCK_XLM_USD_RATE, OFF_RAMP_RATES } from './rates'
 export { TEST_STELLAR_ADDRESS, MOCK_STELLAR_ACCOUNT, MOCK_MEMO } from './stellar'
