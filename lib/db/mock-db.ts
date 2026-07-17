@@ -23,6 +23,7 @@ interface WalletAccountSchema {
 interface SyncState {
     lastSyncAt: string | null
     totalSynced: number
+    lastSyncCursor: string | null
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9)
@@ -31,7 +32,7 @@ class MockDB {
     private users: UserSchema[] = []
     private walletAccounts: WalletAccountSchema[] = []
     private transactions: Transaction[] = []
-    private syncState: SyncState = { lastSyncAt: null, totalSynced: 0 }
+    private syncState: SyncState = { lastSyncAt: null, totalSynced: 0, lastSyncCursor: null }
 
     constructor() {
         this.initializeDefaults()
@@ -103,9 +104,12 @@ class MockDB {
         return { ...this.syncState }
     }
 
-    recordSync(added: number): void {
+    recordSync(added: number, newCursor?: string): void {
         this.syncState.lastSyncAt = new Date().toISOString()
         this.syncState.totalSynced += added
+        if (newCursor) {
+            this.syncState.lastSyncCursor = newCursor
+        }
     }
 }
 
