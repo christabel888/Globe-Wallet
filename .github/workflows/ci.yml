@@ -9,6 +9,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # The app validates these required, non-secret settings at startup.
+      NEXT_PUBLIC_STELLAR_NETWORK: testnet
+      STELLAR_HORIZON_URL: https://horizon-testnet.stellar.org
 
     steps:
     - name: Checkout code
