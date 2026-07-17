@@ -724,6 +724,7 @@ export interface IShellService {
   getNavItems(): NavItem[]
   getMainContentId(): string
   getSafeAreaInsets(): SafeAreaInsets
+}
 // ── Chart Types (Issue #17) ──────────────────────────────────────────────────
 
 /** A single data point in the weekly activity bar chart. */
