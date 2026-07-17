@@ -499,6 +499,23 @@ export interface DeveloperProfile {
   advancedMode: boolean;
 }
 
+// ── Error Codes (Issue #104) ─────────────────────────────────────────────────
+
+export const ErrorCodes = {
+  ERR_INVALID_ADDRESS: 'ERR_INVALID_ADDRESS',
+  ERR_INVALID_AMOUNT: 'ERR_INVALID_AMOUNT',
+  ERR_MISSING_ASSET: 'ERR_MISSING_ASSET',
+  ERR_MISSING_QUERY: 'ERR_MISSING_QUERY',
+  ERR_NOT_FEDERATED: 'ERR_NOT_FEDERATED',
+  ERR_NOT_FOUND: 'ERR_NOT_FOUND',
+  ERR_LOOKUP_FAILED: 'ERR_LOOKUP_FAILED',
+  ERR_INSUFFICIENT_FUNDS: 'ERR_INSUFFICIENT_FUNDS',
+  ERR_NETWORK_TIMEOUT: 'ERR_NETWORK_TIMEOUT',
+  ERR_SLIPPAGE_EXCEEDED: 'ERR_SLIPPAGE_EXCEEDED',
+} as const
+
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]
+
 // ── Off-Ramp Validation Types (Issue #21) ────────────────────────────────────
 
 export type WithdrawalErrorCode =

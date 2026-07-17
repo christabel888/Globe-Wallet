@@ -13,6 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { ErrorCodes } from '../../../lib/types'
 import { federationService } from '../../../lib/services/federation.service'
 
 export async function GET(request: NextRequest) {
@@ -20,14 +21,14 @@ export async function GET(request: NextRequest) {
 
   if (!q || typeof q !== 'string' || !q.trim()) {
     return NextResponse.json(
-      { error: 'ERR_MISSING_QUERY: q parameter is required' },
+      { error: `${ErrorCodes.ERR_MISSING_QUERY}: q parameter is required` },
       { status: 400 },
     )
   }
 
   if (!federationService.isFederated(q.trim())) {
     return NextResponse.json(
-      { error: 'ERR_NOT_FEDERATED: address does not match user*domain.tld format' },
+      { error: `${ErrorCodes.ERR_NOT_FEDERATED}: address does not match user*domain.tld format` },
       { status: 400 },
     )
   }
@@ -36,14 +37,14 @@ export async function GET(request: NextRequest) {
 
   if (result.status === 'not-found') {
     return NextResponse.json(
-      { error: `ERR_NOT_FOUND: no federation record for "${q}"` },
+      { error: `${ErrorCodes.ERR_NOT_FOUND}: no federation record for "${q}"` },
       { status: 404 },
     )
   }
 
   if (result.status === 'error') {
     return NextResponse.json(
-      { error: result.error ?? 'ERR_LOOKUP_FAILED' },
+      { error: result.error ?? ErrorCodes.ERR_LOOKUP_FAILED },
       { status: 502 },
     )
   }

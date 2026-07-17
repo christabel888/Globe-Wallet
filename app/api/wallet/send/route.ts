@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { TransactionResult } from '@/lib/types'
+import { ErrorCodes, type TransactionResult } from '@/lib/types'
 import { TEST_STELLAR_ADDRESS } from '@/lib/fixtures'
 import { validateBearerToken } from '@/lib/auth'
 
@@ -27,21 +27,21 @@ export async function POST(request: NextRequest) {
 
   if (!destination || typeof destination !== 'string') {
     return NextResponse.json(
-      { error: 'ERR_INVALID_ADDRESS: destination is required' },
+      { error: `${ErrorCodes.ERR_INVALID_ADDRESS}: destination is required` },
       { status: 422 },
     )
   }
 
   if (!amount || typeof amount !== 'number' || amount <= 0) {
     return NextResponse.json(
-      { error: 'ERR_INVALID_AMOUNT: amount must be a positive number' },
+      { error: `${ErrorCodes.ERR_INVALID_AMOUNT}: amount must be a positive number` },
       { status: 422 },
     )
   }
 
   if (!asset || typeof asset !== 'string') {
     return NextResponse.json(
-      { error: 'ERR_MISSING_ASSET: asset is required' },
+      { error: `${ErrorCodes.ERR_MISSING_ASSET}: asset is required` },
       { status: 422 },
     )
   }
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   const stellarRegex = /^G[A-Z0-9]{55}$/i
   if (!stellarRegex.test(destination)) {
     return NextResponse.json(
-      { error: 'ERR_INVALID_ADDRESS: not a valid Stellar public key' },
+      { error: `${ErrorCodes.ERR_INVALID_ADDRESS}: not a valid Stellar public key` },
       { status: 422 },
     )
   }
