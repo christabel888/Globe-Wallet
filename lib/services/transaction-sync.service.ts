@@ -8,32 +8,10 @@ import {
 } from '../types'
 import { db } from '../db/mock-db'
 import { generateTransactionId, isoToDisplayDate } from '../transaction-utils'
+import { Horizon } from '@stellar/stellar-sdk'
+import { MOCK_STELLAR_ACCOUNT } from '../fixtures'
 
-const SIMULATED_STELLAR_TRANSACTIONS: Array<Omit<Transaction, 'id' | 'date'>> = [
-  {
-    type: 'receive',
-    amount: 50,
-    asset: 'USDC',
-    address: 'GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX',
-    status: 'completed',
-    category: 'deposit',
-    name: 'USDC Deposit',
-    detail: 'From Stellar network',
-    currency: 'USD',
-    stellarHash: `0xsync_${Date.now()}`,
-  },
-  {
-    type: 'send',
-    amount: 10,
-    asset: 'XLM',
-    address: 'GC3G2N7N5LRYX6L5N2YHV3K2L9P8QW1ZC4T6BNRYX7QK3MUKXHV2RZ4D',
-    status: 'completed',
-    category: 'payment',
-    name: 'XLM Payment',
-    detail: 'Network sync',
-    currency: 'USD',
-  },
-]
+// Replaced by real Horizon sync
 
 export class TransactionSyncService extends BaseService implements ITransactionSyncService {
   private isSyncing = false
@@ -46,24 +24,44 @@ export class TransactionSyncService extends BaseService implements ITransactionS
 
       this.isSyncing = true
       let added = 0
+      let updated = 0
       let failed = 0
 
       try {
+        const server = new Horizon.Server('https://horizon-testnet.stellar.org')
         const existing = await db.getTransactions()
         const existingHashes = new Set(existing.map(t => t.stellarHash).filter(Boolean))
+        const state = db.getSyncState()
+        let latestCursor = state.lastSyncCursor || '0' // Default to 0 to get oldest first, or just some cursor
 
-        for (const template of SIMULATED_STELLAR_TRANSACTIONS) {
-          if (template.stellarHash && existingHashes.has(template.stellarHash)) continue
-          try {
-            const now = new Date().toISOString()
-            const tx: Transaction = {
-              ...template,
-              id: generateTransactionId(),
-              date: isoToDisplayDate(now),
+        try {
+          const page = await server.transactions()
+            .forAccount(MOCK_STELLAR_ACCOUNT.publicKey)
+            .cursor(latestCursor)
+            .limit(10)
+            .call()
+
+          for (const record of page.records) {
+            if (!existingHashes.has(record.hash)) {
+              const tx: Transaction = {
+                id: generateTransactionId(),
+                type: record.source_account === MOCK_STELLAR_ACCOUNT.publicKey ? 'send' : 'receive',
+                amount: 0, // We would normally parse operations to get the exact amount
+                asset: 'XLM',
+                address: record.source_account,
+                date: isoToDisplayDate(record.created_at || new Date().toISOString()),
+                status: record.successful ? 'completed' : 'failed',
+                category: 'transfer',
+                name: 'Network Sync',
+                stellarHash: record.hash,
+              }
+              await db.saveTransaction(tx)
+              added++
             }
-            await db.saveTransaction(tx)
-            added++
-          } catch {
+            latestCursor = record.paging_token
+          }
+        } catch (e: any) {
+          if (e.response?.status !== 404) {
             failed++
           }
         }
@@ -71,16 +69,26 @@ export class TransactionSyncService extends BaseService implements ITransactionS
         const pendingCount = await db.countPending()
         if (pendingCount > 0) {
           const allTxs = await db.getTransactions()
-          let updated = 0
           for (const tx of allTxs.filter(t => t.status === 'pending')) {
-            const settled = await db.updateTransactionStatus(tx.id, 'completed')
-            if (settled) updated++
+            if (!tx.stellarHash) continue
+            try {
+              const record = await server.transactions().transaction(tx.stellarHash).call()
+              const newStatus = record.successful ? 'completed' : 'failed'
+              if (await db.updateTransactionStatus(tx.id, newStatus)) {
+                updated++
+              }
+            } catch (e: any) {
+              if (e.response?.status !== 404) {
+                // If it's not 404, there's a real error. If 404, it remains pending.
+                failed++
+              }
+            }
           }
         }
 
-        db.recordSync(added)
+        db.recordSync(added, latestCursor !== '0' ? latestCursor : undefined)
         const lastSyncAt = new Date().toISOString()
-        return { added, updated: 0, failed, lastSyncAt }
+        return { added, updated, failed, lastSyncAt }
       } finally {
         this.isSyncing = false
       }
