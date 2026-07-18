@@ -70,6 +70,10 @@ describe('ProjectAnalytics accessibility (Issue #17)', () => {
     render(<ProjectAnalytics />)
     const peakLabel = screen.getByText('Peak:')
     expect(peakLabel.tagName.toLowerCase()).toBe('span')
+  })
+})
+
+/**
  * Component tests for ProjectAnalytics dashboard chart (Issue #15)
  * Verifies: typed ChartContainer integration, summary stats, hover interaction.
  */
