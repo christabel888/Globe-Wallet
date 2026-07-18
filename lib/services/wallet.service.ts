@@ -1,5 +1,5 @@
-import { IWalletService, StellarAccount, Balance, Transaction, TransactionResult, AssetCode, StellarServiceError, WalletServiceError } from '../types'
-import { MOCK_STELLAR_ACCOUNT, MOCK_CRYPTO_ASSETS, FixtureFactory } from '../fixtures'
+import { IWalletService, StellarAccount, Balance, Transaction, TransactionResult, AssetCode, StellarServiceError, WalletServiceError, Trustline, TrustlineResult } from '../types'
+import { MOCK_STELLAR_ACCOUNT, MOCK_CRYPTO_ASSETS, SUPPORTED_STELLAR_ASSETS, FixtureFactory } from '../fixtures'
 import { formatAddress } from '../helpers/format'
 import { BaseService } from './base.service'
 import { db } from '../db/mock-db'
@@ -24,12 +24,84 @@ export class WalletService extends BaseService implements IWalletService {
 
     async getBalance(): Promise<Balance[]> {
         return this.withPerformanceTracking('getBalance', async () => {
-            return MOCK_CRYPTO_ASSETS.map(asset => ({
-                asset: asset.code as AssetCode,
-                amount: asset.balance,
-                priceUsd: asset.priceUsd
-            }))
+            const trustlines = await db.getTrustlines();
+            const balances: Balance[] = [];
+
+            for (const tl of trustlines) {
+                const assetFixture = MOCK_CRYPTO_ASSETS.find(a => a.code === tl.asset);
+                const supportedAsset = SUPPORTED_STELLAR_ASSETS.find(a => a.code === tl.asset);
+                
+                if (assetFixture) {
+                    balances.push({
+                        asset: assetFixture.code as AssetCode,
+                        amount: assetFixture.balance,
+                        priceUsd: assetFixture.priceUsd
+                    });
+                } else if (supportedAsset) {
+                    // For newly trusted assets that don't have a balance fixture yet
+                    // Assuming priceUsd is 1.0 for stablecoins or look it up if we had a real price service here, 
+                    // but we can default to 1.0 for USDC/USDT for this mock
+                    balances.push({
+                        asset: supportedAsset.code as AssetCode,
+                        amount: 0,
+                        priceUsd: supportedAsset.code === 'XLM' ? 0.1185 : 1.0 
+                    });
+                }
+            }
+
+            return balances;
         })
+    }
+
+    async getTrustlines(): Promise<Trustline[]> {
+        return this.withPerformanceTracking('getTrustlines', async () => {
+            return db.getTrustlines();
+        });
+    }
+
+    async changeTrustline(asset: AssetCode, action: 'add' | 'remove'): Promise<TrustlineResult> {
+        return this.withPerformanceTracking('changeTrustline', async () => {
+            try {
+                if (asset === 'XLM') {
+                    throw new WalletServiceError("Cannot change trustline for native asset (XLM)");
+                }
+
+                const supportedAsset = SUPPORTED_STELLAR_ASSETS.find(a => a.code === asset);
+                if (!supportedAsset) {
+                    throw new WalletServiceError(`Asset ${asset} is not supported`);
+                }
+
+                const hasTrustline = await db.hasTrustline(asset);
+
+                if (action === 'add') {
+                    if (hasTrustline) {
+                        throw new WalletServiceError(`Trustline for ${asset} already exists`);
+                    }
+                    await db.addTrustline(asset, supportedAsset.issuer);
+                } else if (action === 'remove') {
+                    if (!hasTrustline) {
+                        throw new WalletServiceError(`Trustline for ${asset} does not exist`);
+                    }
+                    
+                    const balances = await this.getBalance();
+                    const assetBalance = balances.find(b => b.asset === asset);
+                    if (assetBalance && assetBalance.amount > 0) {
+                        throw new WalletServiceError(`Cannot remove trustline for ${asset} because it has a non-zero balance`);
+                    }
+                    
+                    await db.removeTrustline(asset);
+                }
+
+                return {
+                    success: true,
+                    asset,
+                    action,
+                    reserveImpact: 0.5 // 0.5 XLM per trustline
+                };
+            } catch (err) {
+                this.handleError(err, 'changeTrustline');
+            }
+        });
     }
 
     async sendPayment(destination: string, amount: number, asset: AssetCode, memo?: string): Promise<TransactionResult> {

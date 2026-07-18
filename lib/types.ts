@@ -187,6 +187,32 @@ export interface PaymentCard {
   gradient: string;
 }
 
+export interface Trustline {
+  asset: AssetCode;
+  issuer: string;
+  established: boolean;
+  createdAt: string;
+}
+
+export interface TrustlineResult {
+  success: boolean;
+  asset: AssetCode;
+  action: 'add' | 'remove';
+  reserveImpact: number;
+  error?: string;
+}
+
+export interface ChangeTrustRequest {
+  asset: AssetCode;
+  action: 'add' | 'remove';
+}
+
+export interface ChangeTrustResponse {
+  success: boolean;
+  data?: TrustlineResult;
+  error?: string;
+}
+
 export interface Balance {
   asset: AssetCode;
   amount: number;
@@ -318,6 +344,8 @@ export interface IWalletService {
   validateAddress(address: string): boolean;
   getTransactionHistory(): Promise<Transaction[]>;
   shortenKey(key: string, lead?: number, tail?: number): string;
+  getTrustlines(): Promise<Trustline[]>;
+  changeTrustline(asset: AssetCode, action: 'add' | 'remove'): Promise<TrustlineResult>;
 }
 
 export interface IPricingService {
@@ -573,7 +601,28 @@ export interface PersistedWithdrawal {
 
 // ── Container Interface ──────────────────────────────────────────────────────
 
+/** Selects which implementation to use for a given service. */
+export type ServiceMode = 'mock' | 'live'
 
+/** Per-service override map. Omitted keys fall back to `environment`. */
+export interface ServiceConfig {
+  wallet?: ServiceMode
+  exchange?: ServiceMode
+  offRamp?: ServiceMode
+  pricing?: ServiceMode
+  fiat?: ServiceMode
+  soroban?: ServiceMode
+  asset?: ServiceMode
+  stellar?: ServiceMode
+}
+
+/** Top-level configuration for the service container. */
+export interface ContainerConfig {
+  /** Shortcut that applies to every service not listed in `services`. */
+  environment?: ServiceMode
+  /** Per-service overrides. */
+  services?: ServiceConfig
+}
 
 // ── Issue #19: Enhanced Enterprise Types ──────────────────────────────────────
 
@@ -742,7 +791,6 @@ export interface IShellService {
   getMainContentId(): string
   getSafeAreaInsets(): SafeAreaInsets
 }
-
 // ── Chart Types (Issue #17) ──────────────────────────────────────────────────
 
 /** A single data point in the weekly activity bar chart. */
