@@ -32,15 +32,27 @@ describe('RatesService', () => {
     })
 
     it('falls back to mock rates on fetch timeout', async () => {
-      global.fetch = jest.fn().mockImplementation(() => new Promise(() => {})) // never resolves
+      // A real fetch rejects with an AbortError once its signal is aborted.
+      // The mock has to honor that too, or it can't exercise the abort path at all —
+      // a Promise that never settles regardless of the signal just hangs until Jest's
+      // own test timeout kills it, which isn't the same thing as verifying the
+      // service's 3s abort actually fires.
+      global.fetch = jest.fn().mockImplementation(
+        (_url: string, options?: { signal?: AbortSignal }) =>
+          new Promise((_resolve, reject) => {
+            options?.signal?.addEventListener('abort', () => {
+              reject(new DOMException('The operation was aborted.', 'AbortError'))
+            })
+          })
+      )
       const startTime = Date.now()
       const rates = await service.getExchangeRates('XLM', ['USDC', 'USDT'])
       const duration = Date.now() - startTime
-      
+
       expect(duration).toBeLessThanOrEqual(5000) // should be ~3s + some overhead
       expect(rates.length).toBeGreaterThan(0)
       expect(rates[0].from).toBe('XLM')
-    })
+    }, 6000)
   })
 
   describe('getExchangeRates — happy path', () => {
