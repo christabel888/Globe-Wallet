@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ErrorCodes, type TransactionResult } from '@/lib/types'
+import { type TransactionResult } from '@/lib/types'
 import { TEST_STELLAR_ADDRESS } from '@/lib/fixtures'
 import { validateBearerToken } from '@/lib/auth'
 import { ErrorCodes, apiError } from '@/lib/errors'

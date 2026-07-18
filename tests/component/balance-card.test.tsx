@@ -1,6 +1,7 @@
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { BalanceCard } from '../../components/app/balance-card'
 import { FinanceServicesProvider } from '../../hooks/useFinanceServices'
+import { ActiveAccountProvider } from '../../hooks/useActiveAccount'
 import { FinanceServiceContainer } from '../../lib/services/container'
 import React from 'react'
 
@@ -31,7 +32,9 @@ const renderBalanceCard = () => {
   )
   return render(
     <FinanceServicesProvider services={services}>
-      <BalanceCard />
+      <ActiveAccountProvider>
+        <BalanceCard />
+      </ActiveAccountProvider>
     </FinanceServicesProvider>,
   )
 }
@@ -57,5 +60,10 @@ describe('BalanceCard (Issue #14)', () => {
     const card = await screen.findByTestId('balance-card', {}, { timeout: 5000 })
     expect(card).toBeInTheDocument()
     expect(mockFiat.getWallets).toHaveBeenCalled()
+  })
+
+  it('should render the account switcher', () => {
+    renderBalanceCard()
+    expect(screen.getByTestId('account-switcher')).toBeInTheDocument()
   })
 })

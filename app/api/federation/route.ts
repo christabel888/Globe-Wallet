@@ -13,7 +13,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { ErrorCodes } from '../../../lib/types'
 import { federationService } from '../../../lib/services/federation.service'
 import { ErrorCodes, apiError } from '../../../lib/errors'
 

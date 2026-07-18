@@ -84,14 +84,17 @@ export function useWallet() {
   );
 
   return {
-    getAccount: () => wallet.getAccountInfo(),
-    getBalance: () => wallet.getBalance(),
+    getAccount: (accountId?: string) => wallet.getAccountInfo(accountId),
+    listAccounts: (userId?: string) => wallet.listAccounts(userId),
+    getActiveAccountId: () => wallet.getActiveAccountId(),
+    switchAccount: (accountId: string) => wallet.switchAccount(accountId),
+    getBalance: (accountId?: string) => wallet.getBalance(accountId),
     sendPayment,
-    generateAddress: () => wallet.generateReceiveAddress(),
+    generateAddress: (accountId?: string) => wallet.generateReceiveAddress(accountId),
     validateAddress: (address: string) => wallet.validateAddress(address),
     shortenKey: (key: string, lead?: number, tail?: number) =>
       wallet.shortenKey(key, lead, tail),
-    getHistory: () => wallet.getTransactionHistory(),
+    getHistory: (accountId?: string) => wallet.getTransactionHistory(accountId),
     isProcessing,
   };
 }

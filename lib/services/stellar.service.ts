@@ -1,19 +1,50 @@
-import { IStellarService, StellarAccount, OffRampMethod, CurrencyCode, StellarServiceError } from '../types'
-import { MOCK_STELLAR_ACCOUNT, TEST_STELLAR_ADDRESS, MOCK_MEMO, OFF_RAMP_RATES } from '../fixtures'
+import { IStellarService, StellarAccount, OffRampMethod, CurrencyCode, StellarServiceError, WalletAccount } from '../types'
+import { OFF_RAMP_RATES } from '../fixtures'
 import { formatAddress } from '../helpers/format'
+import { db } from '../db/mock-db'
 
+/**
+ * Stellar network helpers. Account-scoped methods accept an optional
+ * `accountId` and default to the active/primary wallet account.
+ */
 export class StellarService implements IStellarService {
-  getAccountInfo(): StellarAccount {
-    return { 
-      ...MOCK_STELLAR_ACCOUNT,
-      name: 'Primary Wallet',
-      network: MOCK_STELLAR_ACCOUNT.network || 'Stellar Public Network',
-      isFunded: true
+  listAccounts(userId?: string): WalletAccount[] {
+    return db.listAccountsSync(userId)
+  }
+
+  getActiveAccountId(): string | null {
+    return db.getActiveAccountSync()?.id ?? null
+  }
+
+  switchAccount(accountId: string): WalletAccount {
+    try {
+      return db.setActiveAccountSync(accountId)
+    } catch (err) {
+      throw new StellarServiceError(
+        err instanceof Error ? err.message : `Unknown wallet account: ${accountId}`,
+      )
     }
   }
 
-  generateReceiveAddress(): string {
-    return TEST_STELLAR_ADDRESS
+  getAccountInfo(accountId?: string): StellarAccount {
+    try {
+      const account = db.resolveAccountSync(accountId)
+      return {
+        id: account.id,
+        publicKey: account.publicKey,
+        name: account.name,
+        network: account.network,
+        isFunded: account.isFunded,
+      }
+    } catch (err) {
+      throw new StellarServiceError(
+        err instanceof Error ? err.message : 'No wallet account available',
+      )
+    }
+  }
+
+  generateReceiveAddress(accountId?: string): string {
+    return this.getAccountInfo(accountId).publicKey
   }
 
   validateAddress(address: string): boolean {
