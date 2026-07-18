@@ -187,6 +187,32 @@ export interface PaymentCard {
   gradient: string;
 }
 
+export interface Trustline {
+  asset: AssetCode;
+  issuer: string;
+  established: boolean;
+  createdAt: string;
+}
+
+export interface TrustlineResult {
+  success: boolean;
+  asset: AssetCode;
+  action: 'add' | 'remove';
+  reserveImpact: number;
+  error?: string;
+}
+
+export interface ChangeTrustRequest {
+  asset: AssetCode;
+  action: 'add' | 'remove';
+}
+
+export interface ChangeTrustResponse {
+  success: boolean;
+  data?: TrustlineResult;
+  error?: string;
+}
+
 export interface Balance {
   asset: AssetCode;
   amount: number;
@@ -318,6 +344,8 @@ export interface IWalletService {
   validateAddress(address: string): boolean;
   getTransactionHistory(): Promise<Transaction[]>;
   shortenKey(key: string, lead?: number, tail?: number): string;
+  getTrustlines(): Promise<Trustline[]>;
+  changeTrustline(asset: AssetCode, action: 'add' | 'remove'): Promise<TrustlineResult>;
 }
 
 export interface IPricingService {
