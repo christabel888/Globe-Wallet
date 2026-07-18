@@ -556,7 +556,28 @@ export interface PersistedWithdrawal {
 
 // ── Container Interface ──────────────────────────────────────────────────────
 
+/** Selects which implementation to use for a given service. */
+export type ServiceMode = 'mock' | 'live'
 
+/** Per-service override map. Omitted keys fall back to `environment`. */
+export interface ServiceConfig {
+  wallet?: ServiceMode
+  exchange?: ServiceMode
+  offRamp?: ServiceMode
+  pricing?: ServiceMode
+  fiat?: ServiceMode
+  soroban?: ServiceMode
+  asset?: ServiceMode
+  stellar?: ServiceMode
+}
+
+/** Top-level configuration for the service container. */
+export interface ContainerConfig {
+  /** Shortcut that applies to every service not listed in `services`. */
+  environment?: ServiceMode
+  /** Per-service overrides. */
+  services?: ServiceConfig
+}
 
 // ── Issue #19: Enhanced Enterprise Types ──────────────────────────────────────
 
