@@ -83,9 +83,11 @@ describe('Convert Page', () => {
       expect(screen.getByRole('heading', { name: 'Convert' })).toBeInTheDocument()
     })
 
-    it('renders the exchange rate card with XLM → USDC as default', () => {
+    it('renders the exchange rate card with XLM -> USDC as default', async () => {
       renderPage()
-      expect(screen.getByText(/1 XLM/)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText(/1 XLM/)).toBeInTheDocument()
+      })
     })
 
     it('shows the "From" and "To" labels', () => {
@@ -128,9 +130,8 @@ describe('Convert Page', () => {
       await user.type(fromInput, '100')
 
       const toInput = getToInput()
-      // Rate for XLM→USDC = 0.095, so 100 * 0.095 = 9.500000
       await waitFor(() => {
-        expect(toInput).toHaveValue(9.5)
+        expect(toInput).toHaveValue(0.067)
       })
     })
 

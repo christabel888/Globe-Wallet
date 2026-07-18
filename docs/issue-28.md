@@ -86,6 +86,17 @@ NEXT_PUBLIC_APP_ENV=development
 
 > Variables prefixed with `NEXT_PUBLIC_` are embedded in the client bundle at build time. Do not put secrets in them.
 
+### Service mode resolution
+
+`NEXT_PUBLIC_APP_ENV` also selects mock vs live service implementations inside `FinanceServiceContainer`:
+
+| Value  | Service mode | Behaviour                          |
+|--------|-------------|-------------------------------------|
+| unset / `development` / `staging` | `mock` | Returns in-memory mock data; no network calls, no Stellar endpoints. |
+| `production`                      | `live` | Uses live Stellar Horizon / Soroban endpoints. **Currently falls back to mock** — add real implementations in `SERVICE_FACTORIES` in `container.ts` per-service. |
+
+Override per service by passing a `ContainerConfig` to the constructor — see `lib/types.ts` for the full shape.
+
 ---
 
 ## 4. Stellar Network Configuration

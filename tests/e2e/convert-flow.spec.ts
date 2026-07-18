@@ -1,17 +1,4 @@
 /**
- * E2E tests — Convert Page (Issue #20)
- *
- * Critical user flows tested:
- *   1. Happy path — enter amount, see conversion, submit successfully
- *   2. Failure path — insufficient balance shows error, no conversion
- *
- * Playwright navigates to the real /convert page served by Next.js.
- * No mocks — tests the real rendered output.
- */
-
-import { test, expect } from '@playwright/test'
-
-test.describe('Convert Flow — Issue #20', () => {
  * E2E — Convert Flow (issue #25)
  * Covers: rate display, amount input, swap currencies, fee summary, convert button.
  */

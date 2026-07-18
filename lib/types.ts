@@ -187,6 +187,32 @@ export interface PaymentCard {
   gradient: string;
 }
 
+export interface Trustline {
+  asset: AssetCode;
+  issuer: string;
+  established: boolean;
+  createdAt: string;
+}
+
+export interface TrustlineResult {
+  success: boolean;
+  asset: AssetCode;
+  action: 'add' | 'remove';
+  reserveImpact: number;
+  error?: string;
+}
+
+export interface ChangeTrustRequest {
+  asset: AssetCode;
+  action: 'add' | 'remove';
+}
+
+export interface ChangeTrustResponse {
+  success: boolean;
+  data?: TrustlineResult;
+  error?: string;
+}
+
 export interface Balance {
   asset: AssetCode;
   amount: number;
@@ -318,6 +344,8 @@ export interface IWalletService {
   validateAddress(address: string): boolean;
   getTransactionHistory(): Promise<Transaction[]>;
   shortenKey(key: string, lead?: number, tail?: number): string;
+  getTrustlines(): Promise<Trustline[]>;
+  changeTrustline(asset: AssetCode, action: 'add' | 'remove'): Promise<TrustlineResult>;
 }
 
 export interface IPricingService {
@@ -499,6 +527,23 @@ export interface DeveloperProfile {
   advancedMode: boolean;
 }
 
+// ── Error Codes (Issue #104) ─────────────────────────────────────────────────
+
+export const ErrorCodes = {
+  ERR_INVALID_ADDRESS: 'ERR_INVALID_ADDRESS',
+  ERR_INVALID_AMOUNT: 'ERR_INVALID_AMOUNT',
+  ERR_MISSING_ASSET: 'ERR_MISSING_ASSET',
+  ERR_MISSING_QUERY: 'ERR_MISSING_QUERY',
+  ERR_NOT_FEDERATED: 'ERR_NOT_FEDERATED',
+  ERR_NOT_FOUND: 'ERR_NOT_FOUND',
+  ERR_LOOKUP_FAILED: 'ERR_LOOKUP_FAILED',
+  ERR_INSUFFICIENT_FUNDS: 'ERR_INSUFFICIENT_FUNDS',
+  ERR_NETWORK_TIMEOUT: 'ERR_NETWORK_TIMEOUT',
+  ERR_SLIPPAGE_EXCEEDED: 'ERR_SLIPPAGE_EXCEEDED',
+} as const
+
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]
+
 // ── Off-Ramp Validation Types (Issue #21) ────────────────────────────────────
 
 export type WithdrawalErrorCode =
@@ -556,7 +601,28 @@ export interface PersistedWithdrawal {
 
 // ── Container Interface ──────────────────────────────────────────────────────
 
+/** Selects which implementation to use for a given service. */
+export type ServiceMode = 'mock' | 'live'
 
+/** Per-service override map. Omitted keys fall back to `environment`. */
+export interface ServiceConfig {
+  wallet?: ServiceMode
+  exchange?: ServiceMode
+  offRamp?: ServiceMode
+  pricing?: ServiceMode
+  fiat?: ServiceMode
+  soroban?: ServiceMode
+  asset?: ServiceMode
+  stellar?: ServiceMode
+}
+
+/** Top-level configuration for the service container. */
+export interface ContainerConfig {
+  /** Shortcut that applies to every service not listed in `services`. */
+  environment?: ServiceMode
+  /** Per-service overrides. */
+  services?: ServiceConfig
+}
 
 // ── Issue #19: Enhanced Enterprise Types ──────────────────────────────────────
 
@@ -724,6 +790,7 @@ export interface IShellService {
   getNavItems(): NavItem[]
   getMainContentId(): string
   getSafeAreaInsets(): SafeAreaInsets
+}
 // ── Chart Types (Issue #17) ──────────────────────────────────────────────────
 
 /** A single data point in the weekly activity bar chart. */

@@ -1,4 +1,4 @@
-import { Transaction, TransactionFilters, TransactionPage } from '../types'
+import { Transaction, TransactionFilters, TransactionPage, Trustline, AssetCode } from '../types'
 import { MOCK_STELLAR_ACCOUNT, MOCK_TRANSACTIONS_COMPACT } from '../fixtures'
 import { filterAndSortTransactions } from '../transaction-utils'
 
@@ -23,6 +23,7 @@ interface WalletAccountSchema {
 interface SyncState {
     lastSyncAt: string | null
     totalSynced: number
+    lastSyncCursor: string | null
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9)
@@ -31,7 +32,8 @@ class MockDB {
     private users: UserSchema[] = []
     private walletAccounts: WalletAccountSchema[] = []
     private transactions: Transaction[] = []
-    private syncState: SyncState = { lastSyncAt: null, totalSynced: 0 }
+    private trustlines: Trustline[] = []
+    private syncState: SyncState = { lastSyncAt: null, totalSynced: 0, lastSyncCursor: null }
 
     constructor() {
         this.initializeDefaults()
@@ -58,6 +60,12 @@ class MockDB {
         })
 
         this.transactions = MOCK_TRANSACTIONS_COMPACT.map((tx) => ({ ...tx }))
+
+        this.trustlines = [
+            { asset: 'XLM', issuer: 'native', established: true, createdAt: new Date().toISOString() },
+            { asset: 'USDC', issuer: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN', established: true, createdAt: new Date().toISOString() },
+            { asset: 'USDT', issuer: 'GCQTGZZZ5GNCIRERPBEWHDQO0TG3EFG5BHTO223UOM8F7B3I6T5B5E5W', established: true, createdAt: new Date().toISOString() },
+        ]
     }
 
     async getUser(email: string): Promise<UserSchema | undefined> {
@@ -103,9 +111,35 @@ class MockDB {
         return { ...this.syncState }
     }
 
-    recordSync(added: number): void {
+    recordSync(added: number, newCursor?: string): void {
         this.syncState.lastSyncAt = new Date().toISOString()
         this.syncState.totalSynced += added
+        if (newCursor) {
+            this.syncState.lastSyncCursor = newCursor
+        }
+    }
+
+    async getTrustlines(): Promise<Trustline[]> {
+        return [...this.trustlines]
+    }
+
+    async addTrustline(asset: AssetCode, issuer: string): Promise<void> {
+        if (!this.trustlines.find(t => t.asset === asset)) {
+            this.trustlines.push({
+                asset,
+                issuer,
+                established: true,
+                createdAt: new Date().toISOString()
+            })
+        }
+    }
+
+    async removeTrustline(asset: AssetCode): Promise<void> {
+        this.trustlines = this.trustlines.filter(t => t.asset !== asset)
+    }
+
+    async hasTrustline(asset: AssetCode): Promise<boolean> {
+        return this.trustlines.some(t => t.asset === asset)
     }
 }
 
