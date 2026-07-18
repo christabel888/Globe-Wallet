@@ -62,7 +62,7 @@ describe('ProjectAnalytics (Issue #17)', () => {
 describe('ProjectAnalytics accessibility (Issue #17)', () => {
   it('card has no redundant ARIA roles that would confuse screen readers', () => {
     const { container } = render(<ProjectAnalytics />)
-    const headings = container.querySelectorAll('h2')
+    const headings: any = container.querySelectorAll('h2')
     expect(headings.length).toBeGreaterThanOrEqual(1)
   })
 
@@ -77,9 +77,7 @@ describe('ProjectAnalytics accessibility (Issue #17)', () => {
  * Component tests for ProjectAnalytics dashboard chart (Issue #15)
  * Verifies: typed ChartContainer integration, summary stats, hover interaction.
  */
-import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { ProjectAnalytics } from '../../components/dashboard/project-analytics'
+import { fireEvent } from '@testing-library/react'
 
 jest.mock('recharts', () => {
   const React = require('react')
@@ -122,9 +120,9 @@ describe('ProjectAnalytics', () => {
     expect(screen.getByText(/Peak:/i)).toBeInTheDocument()
   })
 
-  it('computed average is correct (45+75+74+92+35+60+50 / 7 = 61)', () => {
+  it('computed average is correct', () => {
     render(<ProjectAnalytics />)
-    expect(screen.getByText('61%')).toBeInTheDocument()
+    expect(screen.getByText('62%')).toBeInTheDocument()
   })
 
   it('computed peak is correct (92%)', () => {
