@@ -241,12 +241,12 @@ describe('formatConversionRate', () => {
   it('formats rate to 6 decimal places', () => {
     const result = formatConversionRate('XLM', 'USDC', 0.095)
     expect(result).toBe('1 XLM = 0.095000 USDC')
-  }
+  })
 
   it('handles rate of 1', () => {
     const result = formatConversionRate('USDC', 'USDT', 1)
     expect(result).toBe('1 USDC = 1.000000 USDT')
-  }
+  })
 
   it('formats large rates correctly', () => {
     const result = formatConversionRate('USDC', 'XLM', 10.53)

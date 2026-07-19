@@ -1,6 +1,5 @@
-import { IFinanceServiceContainer, IWalletService, IExchangeService, IOffRampService, IPricingService, IFiatService, ISorobanService, IAssetService, IStellarService, ContainerConfig, ServiceMode } from '../types'
+import { IFinanceServiceContainer, IWalletService, IOffRampService, IPricingService, IFiatService, ISorobanService, IAssetService, IStellarService, ContainerConfig, ServiceMode } from '../types'
 import { WalletService } from './wallet.service'
-import { ExchangeService } from './exchange.service'
 import { OffRampService } from './off-ramp.service'
 import { PricingService } from './pricing.service'
 import { FiatService } from './fiat.service'
@@ -21,7 +20,6 @@ function modeFor(config: ContainerConfig | undefined, key: string): ServiceMode 
 // Add a 'live' entry alongside 'mock' when a real implementation exists.
 const SERVICE_FACTORIES: Record<string, Partial<Record<ServiceMode, () => any>>> = {
   wallet:   { mock: () => new WalletService() },
-  exchange: { mock: () => new ExchangeService() },
   offRamp:  { mock: () => new OffRampService() },
   pricing:  { mock: () => new PricingService() },
   fiat:     { mock: () => new FiatService() },
@@ -49,10 +47,12 @@ function resolveWithFallback(factories: Partial<Record<ServiceMode, () => any>>,
  * Resolves service implementations based on the supplied config or env var.
  * Pass individual service instances to the constructor to inject specific
  * implementations (the pattern used by tests).
+ *
+ * ExchangeService was removed: it was an unused fake DEX simulator (flat 2%
+ * slippage). Live conversion uses AssetService / conversion-math instead.
  */
 export class FinanceServiceContainer implements IFinanceServiceContainer {
   public readonly wallet: IWalletService
-  public readonly exchange: IExchangeService
   public readonly offRamp: IOffRampService
   public readonly pricing: IPricingService
   public readonly fiat: IFiatService
@@ -62,7 +62,6 @@ export class FinanceServiceContainer implements IFinanceServiceContainer {
 
   constructor(
     walletService?: IWalletService,
-    exchangeService?: IExchangeService,
     offRampService?: IOffRampService,
     pricingService?: IPricingService,
     fiatService?: IFiatService,
@@ -72,7 +71,6 @@ export class FinanceServiceContainer implements IFinanceServiceContainer {
     config?: ContainerConfig,
   ) {
     this.wallet = walletService ?? resolveWithFallback(SERVICE_FACTORIES.wallet, modeFor(config, 'wallet'))
-    this.exchange = exchangeService ?? resolveWithFallback(SERVICE_FACTORIES.exchange, modeFor(config, 'exchange'))
     this.offRamp = offRampService ?? resolveWithFallback(SERVICE_FACTORIES.offRamp, modeFor(config, 'offRamp'))
     this.pricing = pricingService ?? resolveWithFallback(SERVICE_FACTORIES.pricing, modeFor(config, 'pricing'))
     this.fiat = fiatService ?? resolveWithFallback(SERVICE_FACTORIES.fiat, modeFor(config, 'fiat'))
@@ -84,4 +82,4 @@ export class FinanceServiceContainer implements IFinanceServiceContainer {
 
 // Default export instance for standard hook consumption.
 // To switch modes set NEXT_PUBLIC_APP_ENV=production, or pass a ContainerConfig.
-export const financeServices = new FinanceServiceContainer(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, defaultConfig())
+export const financeServices = new FinanceServiceContainer(undefined, undefined, undefined, undefined, undefined, undefined, undefined, defaultConfig())
