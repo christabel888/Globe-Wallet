@@ -28,7 +28,6 @@ export async function POST(request: NextRequest) {
 
   if (!destination || typeof destination !== 'string') {
     return NextResponse.json(
-      { error: `${ErrorCodes.ERR_INVALID_ADDRESS}: destination is required` },
       apiError(ErrorCodes.ERR_INVALID_ADDRESS, 'destination is required'),
       { status: 422 },
     )
@@ -36,7 +35,6 @@ export async function POST(request: NextRequest) {
 
   if (!amount || typeof amount !== 'number' || amount <= 0) {
     return NextResponse.json(
-      { error: `${ErrorCodes.ERR_INVALID_AMOUNT}: amount must be a positive number` },
       apiError(ErrorCodes.ERR_INVALID_AMOUNT, 'amount must be a positive number'),
       { status: 422 },
     )
@@ -44,7 +42,6 @@ export async function POST(request: NextRequest) {
 
   if (!asset || typeof asset !== 'string') {
     return NextResponse.json(
-      { error: `${ErrorCodes.ERR_MISSING_ASSET}: asset is required` },
       apiError(ErrorCodes.ERR_MISSING_ASSET, 'asset is required'),
       { status: 422 },
     )
@@ -53,7 +50,6 @@ export async function POST(request: NextRequest) {
   const stellarRegex = /^G[A-Z0-9]{55}$/i
   if (!stellarRegex.test(destination)) {
     return NextResponse.json(
-      { error: `${ErrorCodes.ERR_INVALID_ADDRESS}: not a valid Stellar public key` },
       apiError(ErrorCodes.ERR_INVALID_ADDRESS, 'not a valid Stellar public key'),
       { status: 422 },
     )

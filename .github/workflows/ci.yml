@@ -28,6 +28,11 @@ jobs:
       # This repository does not commit an npm lockfile, so npm ci cannot run.
       run: npm install --legacy-peer-deps
 
+    - name: Dependency vulnerability gate
+      # Fails on moderate+ advisories unless explicitly allowlisted in
+      # security/npm-audit-allowlist.json with a documented reason.
+      run: npm run audit:gate
+
     - name: Typecheck and build
       run: npm run build
 

@@ -52,6 +52,8 @@ describe('Wallet Mock API Routes Integration', () => {
     it('POST should execute payment successfully on valid inputs', async () => {
       const request = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: JSON.stringify({
           destination: validAddr,
           amount: 50.5,
@@ -72,6 +74,8 @@ describe('Wallet Mock API Routes Integration', () => {
     it('POST should reject invalid address', async () => {
       const request = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: JSON.stringify({
           destination: 'invalid-stellar-key',
           amount: 50.5,
@@ -90,6 +94,8 @@ describe('Wallet Mock API Routes Integration', () => {
     it('POST should reject missing address', async () => {
       const request = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: JSON.stringify({
           amount: 50.5,
           asset: 'XLM'
@@ -106,6 +112,8 @@ describe('Wallet Mock API Routes Integration', () => {
     it('POST should reject negative or zero amount', async () => {
       const request = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: JSON.stringify({
           destination: validAddr,
           amount: -5,
@@ -123,6 +131,8 @@ describe('Wallet Mock API Routes Integration', () => {
     it('POST should reject missing asset', async () => {
       const request = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: JSON.stringify({
           destination: validAddr,
           amount: 10
@@ -139,6 +149,8 @@ describe('Wallet Mock API Routes Integration', () => {
     it('POST should reject malformed JSON', async () => {
       const request = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: 'malformed-json-string'
       })
 

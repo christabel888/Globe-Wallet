@@ -113,18 +113,6 @@ export function useWallets() {
   };
 }
 
-// ── useExchange ───────────────────────────────────────────────────────────────
-
-export function useExchange() {
-  const { exchange } = useFinanceServices();
-  return {
-    estimate: (from: AssetCode, to: AssetCode, amt: number) =>
-      exchange.estimateSwap(from, to, amt),
-    execute: (from: AssetCode, to: AssetCode, amt: number) =>
-      exchange.executeSwap(from, to, amt),
-  };
-}
-
 // ── useOffRamp ────────────────────────────────────────────────────────────────
 
 export function useOffRamp() {

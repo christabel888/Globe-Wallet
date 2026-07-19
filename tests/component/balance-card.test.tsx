@@ -26,7 +26,6 @@ const renderBalanceCard = () => {
   const services = new FinanceServiceContainer(
     undefined,
     undefined,
-    undefined,
     mockPricing as any,
     mockFiat as any,
   )
