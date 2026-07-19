@@ -10,6 +10,24 @@ interface UserSchema {
     created_at: string
 }
 
+interface WebAuthnCredentialSchema {
+    id: string
+    user_id: string
+    credential_id: string
+    public_key: string
+    user_handle: string
+    transports?: string[]
+    counter: number
+    created_at: string
+}
+
+interface RecoveryKeySchema {
+    id: string
+    user_id: string
+    recovery_key_hash: string
+    created_at: string
+}
+
 interface WalletAccountSchema {
     id: string
     user_id: string
@@ -30,6 +48,8 @@ const generateId = () => Math.random().toString(36).substr(2, 9)
 
 class MockDB {
     private users: UserSchema[] = []
+    private webAuthnCredentials: WebAuthnCredentialSchema[] = []
+    private recoveryKeys: RecoveryKeySchema[] = []
     private walletAccounts: WalletAccountSchema[] = []
     private transactions: Transaction[] = []
     private trustlines: Trustline[] = []
@@ -140,6 +160,41 @@ class MockDB {
 
     async hasTrustline(asset: AssetCode): Promise<boolean> {
         return this.trustlines.some(t => t.asset === asset)
+    }
+
+    async getWebAuthnCredentialsByUserId(userId: string): Promise<WebAuthnCredentialSchema[]> {
+        return this.webAuthnCredentials.filter(c => c.user_id === userId)
+    }
+
+    async getWebAuthnCredentialById(credentialId: string): Promise<WebAuthnCredentialSchema | undefined> {
+        return this.webAuthnCredentials.find(c => c.credential_id === credentialId)
+    }
+
+    async saveWebAuthnCredential(credential: Omit<WebAuthnCredentialSchema, 'id' | 'created_at'>): Promise<void> {
+        this.webAuthnCredentials.push({
+            id: generateId(),
+            ...credential,
+            created_at: new Date().toISOString(),
+        })
+    }
+
+    async updateWebAuthnCredentialCounter(credentialId: string, counter: number): Promise<boolean> {
+        const cred = this.webAuthnCredentials.find(c => c.credential_id === credentialId)
+        if (!cred) return false
+        cred.counter = counter
+        return true
+    }
+
+    async getRecoveryKeysByUserId(userId: string): Promise<RecoveryKeySchema[]> {
+        return this.recoveryKeys.filter(k => k.user_id === userId)
+    }
+
+    async saveRecoveryKey(recoveryKey: Omit<RecoveryKeySchema, 'id' | 'created_at'>): Promise<void> {
+        this.recoveryKeys.push({
+            id: generateId(),
+            ...recoveryKey,
+            created_at: new Date().toISOString(),
+        })
     }
 }
 
