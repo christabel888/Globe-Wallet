@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { FinanceServicesProvider } from "@/hooks/useFinanceServices"
+import { ActiveAccountProvider } from "@/hooks/useActiveAccount"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -55,7 +56,9 @@ export default function RootLayout({
           storageKey="tasko-theme"
         >
           <FinanceServicesProvider>
-            {children}
+            <ActiveAccountProvider>
+              {children}
+            </ActiveAccountProvider>
           </FinanceServicesProvider>
         </ThemeProvider>
         <Analytics />
