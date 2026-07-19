@@ -239,15 +239,6 @@ export interface Transaction {
   detail?: string;
 }
 
-export interface SwapEstimate {
-  from: AssetCode;
-  to: AssetCode;
-  fromAmount: number;
-  toAmount: number;
-  path: AssetCode[];
-  priceImpact: number;
-}
-
 export interface TransactionResult {
   success: boolean;
   hash?: string;
@@ -301,13 +292,6 @@ export class WalletServiceError extends ServiceError {
   }
 }
 
-export class ExchangeServiceError extends ServiceError {
-  constructor(message: string, code?: string) {
-    super(message, code);
-    this.name = "ExchangeServiceError";
-  }
-}
-
 export class OffRampServiceError extends ServiceError {
   constructor(message: string, code?: string) {
     super(message, code);
@@ -352,19 +336,6 @@ export interface IPricingService {
   getAssets(): CryptoAsset[];
   getPrice(code: AssetCode): Promise<number>;
   formatAsset(amount: number, code: AssetCode, hidden?: boolean): string;
-}
-
-export interface IExchangeService {
-  estimateSwap(
-    from: AssetCode,
-    to: AssetCode,
-    amount: number,
-  ): Promise<SwapEstimate>;
-  executeSwap(
-    from: AssetCode,
-    to: AssetCode,
-    amount: number,
-  ): Promise<TransactionResult>;
 }
 
 export interface IOffRampService {
@@ -607,7 +578,6 @@ export type ServiceMode = 'mock' | 'live'
 /** Per-service override map. Omitted keys fall back to `environment`. */
 export interface ServiceConfig {
   wallet?: ServiceMode
-  exchange?: ServiceMode
   offRamp?: ServiceMode
   pricing?: ServiceMode
   fiat?: ServiceMode
@@ -685,7 +655,6 @@ export interface PaginatedResponse<T> {
 export interface IFinanceServiceContainer {
   wallet: IWalletService;
   pricing: IPricingService;
-  exchange: IExchangeService;
   offRamp: IOffRampService;
   fiat: IFiatService;
   soroban: ISorobanService;
