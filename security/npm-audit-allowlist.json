@@ -1,0 +1,5 @@
+{
+  "$schema_comment": "Explicit accepted-risk exceptions for the npm audit CI gate. Empty means every finding at or above threshold fails the build.",
+  "threshold": "moderate",
+  "exceptions": []
+}

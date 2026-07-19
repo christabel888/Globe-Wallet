@@ -220,6 +220,7 @@ describe("API Routes Integration", () => {
     it("POST should process withdrawal and return success details", async () => {
       const request = new NextRequest("http://localhost/api/off-ramp", {
         method: "POST",
+        headers: { Authorization: "Bearer test-token" },
         body: JSON.stringify({
           asset: "XLM",
           amount: 10,
@@ -245,6 +246,7 @@ describe("API Routes Integration", () => {
     it("POST should return validation errors for missing fields", async () => {
       const request = new NextRequest("http://localhost/api/off-ramp", {
         method: "POST",
+        headers: { Authorization: "Bearer test-token" },
         body: JSON.stringify({ asset: "XLM", amount: 10 }),
       });
 

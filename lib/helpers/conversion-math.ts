@@ -88,9 +88,13 @@ export function applyProcessingFee(amount: number, feeRate = 0.001): number {
  */
 export function deriveToAmount(fromAmountStr: string, rate: number): string {
   if (!fromAmountStr || !rate) return ''
-  const num = new Decimal(fromAmountStr)
-  if (num.isNaN()) return ''
-  return num.times(rate).toFixed(6)
+  try {
+    const num = new Decimal(fromAmountStr)
+    if (num.isNaN()) return ''
+    return num.times(rate).toFixed(6)
+  } catch {
+    return ''
+  }
 }
 
 // ── deriveFromAmount ──────────────────────────────────────────────────────────
@@ -109,9 +113,13 @@ export function deriveToAmount(fromAmountStr: string, rate: number): string {
  */
 export function deriveFromAmount(toAmountStr: string, rate: number): string {
   if (!toAmountStr || !rate) return ''
-  const num = new Decimal(toAmountStr)
-  if (num.isNaN()) return ''
-  return num.div(rate).toFixed(6)
+  try {
+    const num = new Decimal(toAmountStr)
+    if (num.isNaN()) return ''
+    return num.div(rate).toFixed(6)
+  } catch {
+    return ''
+  }
 }
 
 // ── lookupRate ────────────────────────────────────────────────────────────────
@@ -153,9 +161,13 @@ export function calculateNetReceived(
   feeRate = 0.001,
 ): number {
   if (!toAmountStr) return 0
-  const num = new Decimal(toAmountStr)
-  if (num.isNaN()) return 0
-  return applyProcessingFee(num.toNumber(), feeRate)
+  try {
+    const num = new Decimal(toAmountStr)
+    if (num.isNaN()) return 0
+    return applyProcessingFee(num.toNumber(), feeRate)
+  } catch {
+    return 0
+  }
 }
 
 // ── formatConversionRate ──────────────────────────────────────────────────────
