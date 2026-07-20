@@ -130,8 +130,16 @@ export function useOffRamp() {
 export function useSoroban() {
   const { soroban } = useFinanceServices();
   return {
-    createGoal: (amt: number, asset: AssetCode, deadline: number) =>
-      soroban.createSavingsGoal(amt, asset, deadline),
-    stake: (amt: number, asset: AssetCode) => soroban.stakeAssets(amt, asset),
+    addAsset: (user: string, asset: { code: string; issuer?: string }) =>
+      soroban.addAsset(user, asset),
+    removeAsset: (user: string, asset: { code: string; issuer?: string }) =>
+      soroban.removeAsset(user, asset),
+    getAssets: (user: string) => soroban.getAssets(user),
+    setSpendLimit: (user: string, asset: { code: string; issuer?: string }, limit: bigint) =>
+      soroban.setSpendLimit(user, asset, limit),
+    getSpendLimit: (user: string, asset: { code: string; issuer?: string }) =>
+      soroban.getSpendLimit(user, asset),
+    recordSpend: (user: string, asset: { code: string; issuer?: string }, amount: bigint) =>
+      soroban.recordSpend(user, asset, amount),
   };
 }

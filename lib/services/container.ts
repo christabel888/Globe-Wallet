@@ -4,6 +4,7 @@ import { OffRampService } from './off-ramp.service'
 import { PricingService } from './pricing.service'
 import { FiatService } from './fiat.service'
 import { SorobanService } from './soroban.service'
+import { SorobanMockService } from './soroban.service.mock'
 import { AssetService } from './asset.service'
 import { StellarService } from './stellar.service'
 
@@ -23,7 +24,7 @@ const SERVICE_FACTORIES: Record<string, Partial<Record<ServiceMode, () => any>>>
   offRamp:  { mock: () => new OffRampService() },
   pricing:  { mock: () => new PricingService() },
   fiat:     { mock: () => new FiatService() },
-  soroban:  { mock: () => new SorobanService() },
+  soroban:  { mock: () => new SorobanMockService(), live: () => new SorobanService() },
   asset:    { mock: () => new AssetService() },
   stellar:  { mock: () => new StellarService() },
 }
