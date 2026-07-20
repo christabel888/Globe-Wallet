@@ -92,7 +92,7 @@ export function BalanceCard() {
             {wallet ? (
               <>
                 <p className="text-xs text-primary-foreground/80">{wallet.label || `${wallet.code} Wallet`} balance</p>
-                <p className="mt-1 text-4xl font-bold tracking-tight text-balance" data-testid="total-value">
+                <p className="mt-1 text-4xl font-bold tracking-tight text-balance" data-testid="total-value" aria-live="polite" aria-atomic="true">
                   {formatMoney(wallet.balance, wallet.code, hidden)}
                 </p>
 
@@ -105,6 +105,8 @@ export function BalanceCard() {
                         : "bg-destructive/20 text-primary-foreground",
                     )}
                     data-testid="balance-change"
+                    aria-live="polite"
+                    aria-atomic="true"
                   >
                     {(wallet.changePct ?? 0) >= 0 ? "+" : ""}
                     {wallet.changePct ?? 0}% this week

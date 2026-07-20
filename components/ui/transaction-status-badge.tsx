@@ -23,6 +23,7 @@ export function TransactionStatusBadge({ status, className }: TransactionStatusB
   return (
     <span
       role="status"
+      aria-live="polite"
       data-testid="transaction-status-badge"
       data-status={status}
       className={cn(
