@@ -3,7 +3,7 @@ import { WalletService } from '../../../lib/services/wallet.service'
 import { OffRampService } from '../../../lib/services/off-ramp.service'
 import { PricingService } from '../../../lib/services/pricing.service'
 import { FiatService } from '../../../lib/services/fiat.service'
-import { SorobanService } from '../../../lib/services/soroban.service'
+import { SorobanMockService } from '../../../lib/services/soroban.service.mock'
 import { AssetService } from '../../../lib/services/asset.service'
 import { StellarService } from '../../../lib/services/stellar.service'
 
@@ -14,7 +14,7 @@ describe('FinanceServiceContainer', () => {
     expect(container.offRamp).toBeInstanceOf(OffRampService)
     expect(container.pricing).toBeInstanceOf(PricingService)
     expect(container.fiat).toBeInstanceOf(FiatService)
-    expect(container.soroban).toBeInstanceOf(SorobanService)
+    expect(container.soroban).toBeInstanceOf(SorobanMockService)
     expect(container.asset).toBeInstanceOf(AssetService)
     expect(container.stellar).toBeInstanceOf(StellarService)
   })
@@ -54,14 +54,13 @@ describe('FinanceServiceContainer', () => {
     expect(container.offRamp).toBeInstanceOf(OffRampService)
     expect(container.pricing).toBeInstanceOf(PricingService)
     expect(container.fiat).toBeInstanceOf(FiatService)
-    expect(container.soroban).toBeInstanceOf(SorobanService)
+    expect(container.soroban).toBeInstanceOf(SorobanMockService)
     expect(container.asset).toBeInstanceOf(AssetService)
     expect(container.stellar).toBeInstanceOf(StellarService)
   })
 
   it('should fall back to mock when live factory is missing', () => {
-    // No 'live' entries exist in SERVICE_FACTORIES, so 'live' mode falls
-    // back to 'mock' via resolveWithFallback.
+    // Only 'soroban' has a live factory; other services use mock for all modes.
     const container = new FinanceServiceContainer(
       undefined, undefined, undefined, undefined,
       undefined, undefined, undefined, { environment: 'live' }

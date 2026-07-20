@@ -33,6 +33,10 @@ jobs:
       # security/npm-audit-allowlist.json with a documented reason.
       run: npm run audit:gate
 
+    - name: Soroban contract synchronization check
+      # Fails if contracts/soroban-spec.json diverges from the contract source.
+      run: npm run check:soroban-sync
+
     - name: Typecheck and build
       run: npm run build
 

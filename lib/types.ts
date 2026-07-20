@@ -375,13 +375,28 @@ export interface IOffRampService {
   getMethods(): OffRampMethod[];
 }
 
+/**
+ * GlobeWallet Soroban contract types.
+ * Sourced from contracts/soroban-spec.json (hand-maintained from Orbit-Wal/contract).
+ */
+export interface SorobanAssetInfo {
+  code: string
+  issuer?: string
+}
+
 export interface ISorobanService {
-  createSavingsGoal(
-    amount: number,
-    asset: AssetCode,
-    deadline: number,
-  ): Promise<TransactionResult>;
-  stakeAssets(amount: number, asset: AssetCode): Promise<TransactionResult>;
+  /** Register a whitelisted asset for a user wallet. Max 50 assets. */
+  addAsset(user: string, asset: SorobanAssetInfo): Promise<TransactionResult>
+  /** Remove an asset from a user's wallet by asset code. */
+  removeAsset(user: string, asset: SorobanAssetInfo): Promise<TransactionResult>
+  /** Return the list of whitelisted assets for a user. */
+  getAssets(user: string): Promise<SorobanAssetInfo[]>
+  /** Set the daily spend limit (in stroops) for a specific asset. */
+  setSpendLimit(user: string, asset: SorobanAssetInfo, limit: bigint): Promise<TransactionResult>
+  /** Return the daily spend limit for a specific asset. */
+  getSpendLimit(user: string, asset: SorobanAssetInfo): Promise<bigint>
+  /** Record a spend and reject if it would exceed the daily limit. */
+  recordSpend(user: string, asset: SorobanAssetInfo, amount: bigint): Promise<TransactionResult>
 }
 
 export interface IFiatService {
