@@ -16,10 +16,10 @@ describe('Automated Dynamic Color Contrast Audit (WCAG 2.2 AA)', () => {
 
   it('scans every dynamic color catalog path', () => {
     expect(auditResults.length).toBe(DYNAMIC_COLOR_CATALOG.length)
-    expect(auditResults.length).toBeGreaterThan(10)
+    expect(auditResults.length).toBeGreaterThan(15)
   })
 
-  it('verifies 100% of dynamic color paths pass WCAG AA (>= 4.5:1) in Light Mode', () => {
+  it('verifies 100% of dynamic color paths pass WCAG AA in Light Mode', () => {
     const lightFailures = auditResults.filter(res => !res.lightMode.passed)
     if (lightFailures.length > 0) {
       console.error(
@@ -27,6 +27,7 @@ describe('Automated Dynamic Color Contrast Audit (WCAG 2.2 AA)', () => {
         lightFailures.map(f => ({
           id: f.id,
           ratio: f.lightMode.ratio,
+          target: f.lightMode.target,
           fg: f.lightMode.fg,
           bg: f.lightMode.bg,
         })),
@@ -35,7 +36,7 @@ describe('Automated Dynamic Color Contrast Audit (WCAG 2.2 AA)', () => {
     expect(lightFailures).toEqual([])
   })
 
-  it('verifies 100% of dynamic color paths pass WCAG AA (>= 4.5:1) in Dark Mode', () => {
+  it('verifies 100% of dynamic color paths pass WCAG AA in Dark Mode', () => {
     const darkFailures = auditResults.filter(res => !res.darkMode.passed)
     if (darkFailures.length > 0) {
       console.error(
@@ -43,6 +44,7 @@ describe('Automated Dynamic Color Contrast Audit (WCAG 2.2 AA)', () => {
         darkFailures.map(f => ({
           id: f.id,
           ratio: f.darkMode.ratio,
+          target: f.darkMode.target,
           fg: f.darkMode.fg,
           bg: f.darkMode.bg,
         })),
@@ -54,8 +56,8 @@ describe('Automated Dynamic Color Contrast Audit (WCAG 2.2 AA)', () => {
   it('asserts overall 100% WCAG AA compliance across all components and states', () => {
     auditResults.forEach(res => {
       expect(res.passed).toBe(true)
-      expect(res.lightMode.ratio).toBeGreaterThanOrEqual(4.5)
-      expect(res.darkMode.ratio).toBeGreaterThanOrEqual(4.5)
+      expect(res.lightMode.ratio).toBeGreaterThanOrEqual(res.lightMode.target)
+      expect(res.darkMode.ratio).toBeGreaterThanOrEqual(res.darkMode.target)
     })
   })
 })

@@ -66,6 +66,16 @@ export const COLOR_MAP: Record<string, string> = {
   'red-800': '#991b1b',
   'red-900': '#7f1d1d',
 
+  // Rose / Pink family
+  'rose-100': '#ffe4e6',
+  'rose-300': '#fda4af',
+  'rose-800': '#9f1239',
+
+  // Blue / Purple / Cyan family
+  'blue-500': '#3b82f6',
+  'purple-500': '#a855f7',
+  'cyan-500': '#06b6d4',
+
   // Slate / Gray defaults
   'slate-100': '#f1f5f9',
   'slate-800': '#1e293b',
