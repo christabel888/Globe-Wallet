@@ -1,4 +1,4 @@
-import { Transaction, TransactionFilters, TransactionPage, Trustline, AssetCode, WalletAccount } from '../types'
+import { Transaction, TransactionFilters, TransactionPage, Trustline, AssetCode, WalletAccount, ClaimableBalance, TransactionResult } from '../types'
 import {
   MOCK_STELLAR_ACCOUNT,
   MOCK_SECONDARY_STELLAR_ACCOUNT,
@@ -52,6 +52,21 @@ interface SyncState {
     lastSyncCursor: string | null
 }
 
+interface ClaimableBalanceSchema {
+    id: string
+    balanceId: string
+    accountPublicKey: string
+    asset: AssetCode
+    amount: number
+    claimants: { destination: string; predicate?: string }[]
+    sponsor?: string
+    createdAt: string
+    claimedAt?: string
+    memo?: string
+    memoType?: string
+    status: 'available' | 'claimed' | 'deleted'
+}
+
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
 function toWalletAccount(row: WalletAccountSchema): WalletAccount {
@@ -78,6 +93,7 @@ class MockDB {
     private txListeners: Set<(tx: Transaction) => void> = new Set()
     private trustlines: Trustline[] = []
     private syncState: SyncState = { lastSyncAt: null, totalSynced: 0, lastSyncCursor: null }
+    private claimableBalances: ClaimableBalanceSchema[] = []
     private defaultUserId: string = ''
 
     constructor() {
@@ -131,6 +147,35 @@ class MockDB {
             { asset: 'USDC', issuer: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN', established: true, createdAt: new Date().toISOString() },
             { asset: 'USDT', issuer: 'GCQTGZZZ5GNCIRERPBEWHDQO0TG3EFG5BHTO223UOM8F7B3I6T5B5E5W', established: true, createdAt: new Date().toISOString() },
         ]
+
+        // Initialize mock claimable balances for the primary account (Issue #99)
+        const primaryAccount = this.walletAccounts.find(w => w.is_primary)
+        if (primaryAccount) {
+            const primaryPublicKey = primaryAccount.public_key
+            // Create a few mock claimable balances for testing
+            this.claimableBalances.push(
+                {
+                    id: generateId(),
+                    balanceId: '0x' + Math.random().toString(16).slice(2, 66),
+                    accountPublicKey: primaryPublicKey,
+                    asset: 'USDC',
+                    amount: 100.5,
+                    claimants: [{ destination: primaryPublicKey }],
+                    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+                    status: 'available',
+                },
+                {
+                    id: generateId(),
+                    balanceId: '0x' + Math.random().toString(16).slice(2, 66),
+                    accountPublicKey: primaryPublicKey,
+                    asset: 'XLM',
+                    amount: 500,
+                    claimants: [{ destination: primaryPublicKey }],
+                    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+                    status: 'available',
+                },
+            )
+        }
     }
 
     getDefaultUserId(): string {
@@ -349,6 +394,84 @@ class MockDB {
             created_at: new Date().toISOString(),
         })
     }
+
+    // ── Claimable Balances (Issue #99) ─────────────────────────────────────
+
+    getClaimableBalancesByAccountSync(publicKey: string): ClaimableBalanceSchema[] {
+        return this.claimableBalances.filter(b => b.accountPublicKey === publicKey)
+    }
+
+    async getClaimableBalancesByAccount(publicKey: string): Promise<ClaimableBalanceSchema[]> {
+        return this.getClaimableBalancesByAccountSync(publicKey)
+    }
+
+    async getClaimableBalances(accountId?: string): Promise<ClaimableBalance[]> {
+        const account = await this.resolveAccount(accountId)
+        const dbBalances = this.claimableBalances.filter(b => b.accountPublicKey === account.publicKey)
+        return dbBalances.map(b => ({
+            id: b.id,
+            balanceId: b.balanceId,
+            asset: b.asset,
+            amount: b.amount,
+            claimants: b.claimants.map(c => ({
+                destination: c.destination,
+                predicate: c.predicate ? JSON.parse(c.predicate) : undefined,
+            })),
+            sponsor: b.sponsor,
+            status: b.status,
+            createdAt: b.createdAt,
+            memo: b.memo,
+            memoType: b.memoType,
+        }))
+    }
+
+    claimClaimableBalanceSync(balanceId: string, claimantPublicKey: string): TransactionResult {
+        const balance = this.claimableBalances.find(b => b.balanceId === balanceId)
+        if (!balance) {
+            return { success: false, error: 'Claimable balance not found' }
+        }
+
+        if (balance.status !== 'available') {
+            return { success: false, error: 'Claimable balance is not available' }
+        }
+
+        const claimant = balance.claimants.find(c => c.destination === claimantPublicKey)
+        if (!claimant) {
+            return { success: false, error: 'You are not authorized to claim this balance' }
+        }
+
+        // Mark as claimed
+        balance.status = 'claimed'
+        balance.claimedAt = new Date().toISOString()
+
+        // Create a transaction entry
+        const tx: Transaction = {
+            id: Math.floor(Math.random() * 1000000).toString(),
+            type: 'receive',
+            amount: balance.amount,
+            asset: balance.asset,
+            address: balance.accountPublicKey,
+            date: new Date().toISOString(),
+            status: 'completed',
+            stellarHash: `claim:${balanceId}`,
+            category: 'deposit' as const,
+            name: `Claimed ${balance.asset} balance`,
+            detail: `Claimed ${balance.amount} ${balance.asset} from claimable balance`,
+        }
+
+        this.transactions.unshift(tx)
+
+        return {
+            success: true,
+            hash: `claim:${balanceId}`,
+            status: 'completed',
+        }
+    }
+
+    async claimClaimableBalance(balanceId: string, claimantPublicKey: string): Promise<TransactionResult> {
+        return this.claimClaimableBalanceSync(balanceId, claimantPublicKey)
+    }
 }
 
 export const db = new MockDB()
+

@@ -13,4 +13,5 @@ export {
 } from './stellar'
 export { MOCK_SAVINGS_GOALS } from './savings'
 export { MOCK_PAYMENT_CARDS } from './cards'
+export { MOCK_CLAIMABLE_BALANCES, TOTAL_CLAIMABLE_AMOUNT, CLAIMABLE_BALANCES_BY_ASSET } from './claimable-balances'
 export { FixtureFactory } from './factory'

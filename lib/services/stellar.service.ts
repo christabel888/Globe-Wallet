@@ -1,4 +1,4 @@
-import { IStellarService, StellarAccount, OffRampMethod, CurrencyCode, StellarServiceError, WalletAccount } from '../types'
+import { IStellarService, StellarAccount, OffRampMethod, CurrencyCode, StellarServiceError, WalletAccount, ClaimableBalance, TransactionResult } from '../types'
 import { OFF_RAMP_RATES } from '../fixtures'
 import { formatAddress } from '../helpers/format'
 import { db } from '../db/mock-db'
@@ -104,4 +104,50 @@ export class StellarService implements IStellarService {
     }
     return rate
   }
+
+  // ── Claimable Balances (Issue #99) ───────────────────────────────────────
+
+  listClaimableBalances(accountId?: string): ClaimableBalance[] {
+    try {
+      const account = db.resolveAccountSync(accountId)
+      const balances = db.getClaimableBalancesByAccountSync(account.publicKey)
+      return balances.map(b => ({
+        id: b.id,
+        balanceId: b.balanceId,
+        asset: b.asset,
+        amount: b.amount,
+        claimants: b.claimants.map(c => ({
+          destination: c.destination,
+          predicate: c.predicate ? JSON.parse(c.predicate) as any : undefined,
+        })),
+        sponsor: b.sponsor,
+        status: b.status,
+        createdAt: b.createdAt,
+        memo: b.memo,
+        memoType: b.memoType,
+      }))
+    } catch (err) {
+      throw new StellarServiceError(
+        err instanceof Error ? err.message : 'Failed to list claimable balances',
+      )
+    }
+  }
+
+  claimBalance(balanceId: string, accountId?: string): TransactionResult {
+    try {
+      const account = db.resolveAccountSync(accountId)
+      const result = db.claimClaimableBalanceSync(balanceId, account.publicKey)
+      return result
+    } catch (err) {
+      throw new StellarServiceError(
+        err instanceof Error ? err.message : 'Failed to claim balance',
+      )
+    }
+  }
+
+  hasClaimableBalances(address: string): boolean {
+    const balances = db.getClaimableBalancesByAccountSync(address)
+    return balances.length > 0
+  }
 }
+
