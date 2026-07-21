@@ -193,6 +193,8 @@ export function SendForm() {
               <CheckCircle2 className="w-5 h-5 text-green-500" aria-hidden />
             )}
             {isPending ? "Send Submitted" : "Send Complete"}
+            <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400" aria-hidden />
+            Send Complete
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -205,6 +207,7 @@ export function SendForm() {
                 ? "p-3 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm flex flex-col gap-1"
                 : "p-3 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-sm flex flex-col gap-1"
             }
+            className="p-3 rounded-md bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-sm flex flex-col gap-1"
           >
             <span className="font-semibold flex items-center gap-2">
               {isPending

@@ -125,6 +125,12 @@ const customJestConfig = {
   },
 }
 
-module.exports = async () => ({
-  ...(await createJestConfig(customJestConfig)()),
-})
+module.exports = async () => {
+  const baseConfig = await createJestConfig(customJestConfig)()
+  return {
+    ...baseConfig,
+    transformIgnorePatterns: [
+      '/node_modules/(?!(@stellar/stellar-sdk|@noble|@stellar|uint8array-extras)/)',
+    ],
+  }
+}

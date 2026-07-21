@@ -12,6 +12,10 @@ export const ErrorCodes = {
   ERR_ACCOUNT_KEY_MISMATCH: 'ERR_ACCOUNT_KEY_MISMATCH',
   /** Server is missing the environment configuration needed to sign/submit real transactions. */
   ERR_PAYMENT_NOT_CONFIGURED: 'ERR_PAYMENT_NOT_CONFIGURED',
+  ERR_NO_PATH_FOUND: 'ERR_NO_PATH_FOUND',
+  ERR_SLIPPAGE_EXCEEDED: 'ERR_SLIPPAGE_EXCEEDED',
+  ERR_STALE_QUOTE: 'ERR_STALE_QUOTE',
+  ERR_NETWORK_FAILURE: 'ERR_NETWORK_FAILURE',
 } as const
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]
