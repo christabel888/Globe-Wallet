@@ -577,6 +577,83 @@ export interface ConversionResult {
   timestamp: string
 }
 
+// ── Path Payment Types (Issue #98) ───────────────────────────────────────────
+
+export type PathPaymentMode = 'strictSend' | 'strictReceive'
+
+export interface PaymentHopAsset {
+  code: string
+  issuer?: string
+  type: string
+}
+
+export interface PaymentQuote {
+  mode: PathPaymentMode
+  sourceAsset: AssetCode
+  destinationAsset: AssetCode
+  executableSourceAmount: string
+  executableDestinationAmount: string
+  path: PaymentHopAsset[]
+  estimatedPrice: number
+  priceImpact: number | null
+  slippageTolerance: number
+  destMin: string
+  sendMax: string
+  expiresAt: number
+  createdAt: number
+  isStale?: boolean
+}
+
+export interface PathPaymentParams {
+  sourceAsset: AssetCode
+  destinationAsset: AssetCode
+  amount: string
+  mode: PathPaymentMode
+  slippageTolerance?: number
+  destinationAccount?: string
+}
+
+export interface ExecutePathPaymentParams {
+  quote: PaymentQuote
+  sourceSecretOrKeypair?: string
+  destinationAccount?: string
+}
+
+export interface PathPaymentExecutionResult {
+  success: boolean
+  hash?: string
+  ledger?: number
+  error?: string
+  sourceAmountPaid?: string
+  destinationAmountReceived?: string
+}
+
+export interface IPathPaymentService {
+  findQuote(params: PathPaymentParams): Promise<PaymentQuote>
+  executePayment(params: ExecutePathPaymentParams): Promise<PathPaymentExecutionResult>
+}
+
+export class NoPathFoundError extends Error {
+  constructor(message = 'No available conversion path found on Stellar network') {
+    super(message)
+    this.name = 'NoPathFoundError'
+  }
+}
+
+export class SlippageExceededError extends Error {
+  constructor(message = 'Execution amount exceeds configured slippage tolerance') {
+    super(message)
+    this.name = 'SlippageExceededError'
+  }
+}
+
+export class StaleQuoteError extends Error {
+  constructor(message = 'Quote has expired. Please refresh the quote before converting.') {
+    super(message)
+    this.name = 'StaleQuoteError'
+  }
+}
+
 // ── Onboarding Types (Issue #29) ─────────────────────────────────────────────
 
 /** Tracks completion of developer onboarding steps for new contributors. */
@@ -620,6 +697,9 @@ export const ErrorCodes = {
   ERR_INSUFFICIENT_FUNDS: 'ERR_INSUFFICIENT_FUNDS',
   ERR_NETWORK_TIMEOUT: 'ERR_NETWORK_TIMEOUT',
   ERR_SLIPPAGE_EXCEEDED: 'ERR_SLIPPAGE_EXCEEDED',
+  ERR_NO_PATH_FOUND: 'ERR_NO_PATH_FOUND',
+  ERR_STALE_QUOTE: 'ERR_STALE_QUOTE',
+  ERR_NETWORK_FAILURE: 'ERR_NETWORK_FAILURE',
 } as const
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]
@@ -693,6 +773,7 @@ export interface ServiceConfig {
   soroban?: ServiceMode
   asset?: ServiceMode
   stellar?: ServiceMode
+  pathPayment?: ServiceMode
 }
 
 /** Top-level configuration for the service container. */
@@ -771,6 +852,7 @@ export interface IFinanceServiceContainer {
   // Legacy compatibility
   asset: IAssetService;
   stellar: IStellarService;
+  pathPayment: IPathPaymentService;
 }
 
 // ── Accessibility Audit (Issue #24) ─────────────────────────────────────────

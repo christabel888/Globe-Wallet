@@ -17,7 +17,7 @@ const customJestConfig = {
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/', '<rootDir>/tests/e2e/'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   transformIgnorePatterns: [
-    '/node_modules/(?!(@stellar/stellar-sdk|@noble|@stellar)/)',
+    '/node_modules/(?!(@stellar/stellar-sdk|@noble|@stellar|uint8array-extras)/)',
   ],
   moduleNameMapper: {
     '^.+\\.(css|less|scss|sass)$': 'identity-obj-proxy',
@@ -123,6 +123,12 @@ const customJestConfig = {
   },
 }
 
-module.exports = async () => ({
-  ...(await createJestConfig(customJestConfig)()),
-})
+module.exports = async () => {
+  const baseConfig = await createJestConfig(customJestConfig)()
+  return {
+    ...baseConfig,
+    transformIgnorePatterns: [
+      '/node_modules/(?!(@stellar/stellar-sdk|@noble|@stellar|uint8array-extras)/)',
+    ],
+  }
+}
