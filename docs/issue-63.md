@@ -128,6 +128,15 @@ wallet). I did not invent a fake custody layer to paper over that — instead:
   `SUPPORTED_STELLAR_ASSETS` and Stellar's 28-byte `MEMO_TEXT` limit before
   any network call, with new `ERR_UNSUPPORTED_ASSET` / `ERR_MEMO_TOO_LONG`
   error codes.
+- **Drive-by fix (test infra)**: `components/ui/alert.tsx` declared
+  `AlertTitle` twice (a verbatim, byte-for-byte duplicate — a copy-paste
+  merge artifact). That's a Jest parse error for every test importing
+  `Alert` transitively, including `tests/component/send-form.test.tsx`,
+  which this PR already extends with a new pending-state test. Removed the
+  duplicate so that test (and three other previously-broken suites:
+  `CryptoConverter.test.tsx`, `WalletErrorAlert.test.tsx`,
+  `send-flow.test.tsx`) actually run and pass instead of being asserted
+  only in isolation.
 - **Drive-by fix**: `soroban.service.ts` hardcoded the **Futurenet**
   passphrase (`Test SDF Future Network ; October 2022`) for the `testnet`
   branch — a real, separate bug in the same "which network passphrase do we
