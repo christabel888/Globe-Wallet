@@ -7,6 +7,40 @@ export type AssetCode = "XLM" | "USDC" | "USDT";
 export type CurrencyCode = "NGN" | "USD" | "EUR" | "GBP";
 export type TransactionDirection = "in" | "out";
 
+// ── Claimable Balances (Issue #99) ───────────────────────────────────────────
+
+/** Status of a claimable balance on the Stellar network */
+export type ClaimableBalanceStatus = "available" | "claimed" | "deleted";
+
+/** Claimant definition for a claimable balance */
+export interface Claimant {
+  destination: string;
+  /** Predicate for vesting conditions */
+  predicate?: ClaimableBalancePredicate;
+}
+
+/** Predicate for claimable balance vesting conditions */
+export interface ClaimableBalancePredicate {
+  /** Unix timestamp for time-based vesting */
+  simpleTime?: string;
+  /** Simple relative time in seconds from now */
+  simpleRelative?: number;
+}
+
+/** A claimable balance on the Stellar network */
+export interface ClaimableBalance {
+  id: string;
+  balanceId: string;
+  asset: AssetCode;
+  amount: number;
+  claimants: Claimant[];
+  sponsor?: string;
+  status: ClaimableBalanceStatus;
+  createdAt: string;
+  memo?: string;
+  memoType?: string;
+}
+
 export type TransactionCategory =
   | "payment"
   | "exchange"
@@ -264,6 +298,28 @@ export interface TransactionResult {
   status?: "completed" | "pending" | "failed";
 }
 
+export interface ClaimRequest {
+  balanceId: string;
+  accountId?: string;
+}
+
+export interface ClaimResponse {
+  success: boolean;
+  hash?: string;
+  status?: "completed" | "pending" | "failed";
+  error?: string;
+}
+
+export interface ClaimableBalancesResponse {
+  success: boolean;
+  data?: {
+    balances: ClaimableBalance[];
+    totalAmount: number;
+    count: number;
+  };
+  error?: string;
+}
+
 export interface FeeEstimate {
   base: number;
   network: number;
@@ -356,6 +412,10 @@ export interface IWalletService {
   shortenKey(key: string, lead?: number, tail?: number): string;
   getTrustlines(accountId?: string): Promise<Trustline[]>;
   changeTrustline(asset: AssetCode, action: 'add' | 'remove', accountId?: string): Promise<TrustlineResult>;
+  // ── Claimable Balances (Issue #99) ─────────────────────────────────────
+  listClaimableBalances(accountId?: string): Promise<ClaimableBalance[]>;
+  claimBalance(balanceId: string, accountId?: string): Promise<TransactionResult>;
+  hasClaimableBalances(address: string): Promise<boolean>;
 }
 
 export interface IPricingService {
@@ -471,6 +531,10 @@ export interface IStellarService {
   shortenKey(key: string, lead?: number, tail?: number): string;
   getOffRampMethods(): OffRampMethod[];
   getOffRampRate(currency: CurrencyCode): number;
+  // ── Claimable Balances (Issue #99) ─────────────────────────────────────
+  listClaimableBalances(accountId?: string): ClaimableBalance[];
+  claimBalance(balanceId: string, accountId?: string): TransactionResult;
+  hasClaimableBalances(address: string): boolean;
 }
 
 // ── Convert Page Types (Issue #20) ──────────────────────────────────────────

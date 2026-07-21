@@ -1,4 +1,4 @@
-import { IWalletService, StellarAccount, Balance, Transaction, TransactionResult, AssetCode, StellarServiceError, WalletServiceError, Trustline, TrustlineResult, WalletAccount } from '../types'
+import { IWalletService, StellarAccount, Balance, Transaction, TransactionResult, AssetCode, StellarServiceError, WalletServiceError, Trustline, TrustlineResult, WalletAccount, ClaimableBalance } from '../types'
 import { MOCK_CRYPTO_ASSETS, SUPPORTED_STELLAR_ASSETS } from '../fixtures'
 import { formatAddress } from '../helpers/format'
 import { BaseService } from './base.service'
@@ -207,5 +207,25 @@ export class WalletService extends BaseService implements IWalletService {
 
     shortenKey(key: string, lead = 6, tail = 6): string {
         return formatAddress(key, lead, tail)
+    }
+
+    // ── Claimable Balances (Issue #99) ─────────────────────────────────────
+    async listClaimableBalances(accountId?: string): Promise<ClaimableBalance[]> {
+        return this.withPerformanceTracking('listClaimableBalances', async () => {
+            await db.resolveAccount(accountId)
+            return db.getClaimableBalances(accountId)
+        })
+    }
+
+    async claimBalance(balanceId: string, accountId?: string): Promise<TransactionResult> {
+        return this.withPerformanceTracking('claimBalance', async () => {
+            const account = await db.resolveAccount(accountId)
+            return db.claimClaimableBalance(balanceId, account.publicKey)
+        })
+    }
+
+    async hasClaimableBalances(address: string): Promise<boolean> {
+        const balances = await db.getClaimableBalancesByAccount(address)
+        return balances.length > 0
     }
 }
