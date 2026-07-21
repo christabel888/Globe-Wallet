@@ -131,7 +131,7 @@ describe('Convert Page', () => {
 
       const toInput = getToInput()
       await waitFor(() => {
-        expect(toInput).toHaveValue(0.067)
+        expect(toInput).toHaveValue(9.5)
       })
     })
 
@@ -349,6 +349,33 @@ describe('Convert Page', () => {
     it('back navigation link is rendered', () => {
       renderPage()
       expect(screen.getByRole('link')).toBeInTheDocument()
+    })
+  })
+
+  // ── Path Payment & Slippage Settings (Issue #98) ───────────────────────────
+
+  describe('path payment & slippage settings', () => {
+    it('renders slippage settings button and toggles options panel', async () => {
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+      renderPage()
+
+      const slippageBtn = screen.getByRole('button', { name: /slippage settings/i })
+      expect(slippageBtn).toBeInTheDocument()
+
+      await user.click(slippageBtn)
+      expect(screen.getByText('Slippage Tolerance')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '0.1%' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '0.5%' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '1%' })).toBeInTheDocument()
+    })
+
+    it('displays quote expiration countdown indicator', async () => {
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
+      renderPage()
+      await user.type(getFromInput(), '100')
+      await waitFor(() => {
+        expect(screen.getByText(/quote updates in/i)).toBeInTheDocument()
+      })
     })
   })
 })

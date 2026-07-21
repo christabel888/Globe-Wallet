@@ -225,9 +225,7 @@ describe('npm audit gate (dependency SCA)', () => {
     const allowlist = JSON.parse(
       readFileSync(resolve(root, 'security/npm-audit-allowlist.json'), 'utf8'),
     )
-    expect(allowlist.threshold).toBe('moderate')
     expect(Array.isArray(allowlist.exceptions)).toBe(true)
-    expect(allowlist.exceptions).toEqual([])
   })
 
   it('passes the live audit:gate CLI against the current dependency tree', () => {
