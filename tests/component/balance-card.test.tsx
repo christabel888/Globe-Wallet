@@ -59,6 +59,15 @@ describe('BalanceCard (Issue #14)', () => {
     const card = await screen.findByTestId('balance-card', {}, { timeout: 5000 })
     expect(card).toBeInTheDocument()
     expect(mockFiat.getWallets).toHaveBeenCalled()
+    
+    // Verify accessibility requirements for async balance updates (Issue #88)
+    const balanceValue = screen.getByTestId('total-value')
+    expect(balanceValue).toHaveAttribute('aria-live', 'polite')
+    expect(balanceValue).toHaveAttribute('aria-atomic', 'true')
+    
+    const balanceChange = screen.getByTestId('balance-change')
+    expect(balanceChange).toHaveAttribute('aria-live', 'polite')
+    expect(balanceChange).toHaveAttribute('aria-atomic', 'true')
   })
 
   it('should render the account switcher', () => {

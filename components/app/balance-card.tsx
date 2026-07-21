@@ -122,6 +122,8 @@ export function BalanceCard() {
                         : "bg-destructive/20 text-primary-foreground",
                     )}
                     data-testid="balance-change"
+                    aria-live="polite"
+                    aria-atomic="true"
                   >
                     {(fiatWallet.changePct ?? 0) >= 0 ? "+" : ""}
                     {fiatWallet.changePct ?? 0}% this week
