@@ -1,6 +1,7 @@
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { BalanceCard } from '../../components/app/balance-card'
 import { FinanceServicesProvider } from '../../hooks/useFinanceServices'
+import { ActiveAccountProvider } from '../../hooks/useActiveAccount'
 import { FinanceServiceContainer } from '../../lib/services/container'
 import React from 'react'
 
@@ -25,13 +26,14 @@ const renderBalanceCard = () => {
   const services = new FinanceServiceContainer(
     undefined,
     undefined,
-    undefined,
     mockPricing as any,
     mockFiat as any,
   )
   return render(
     <FinanceServicesProvider services={services}>
-      <BalanceCard />
+      <ActiveAccountProvider>
+        <BalanceCard />
+      </ActiveAccountProvider>
     </FinanceServicesProvider>,
   )
 }
@@ -66,5 +68,10 @@ describe('BalanceCard (Issue #14)', () => {
     const balanceChange = screen.getByTestId('balance-change')
     expect(balanceChange).toHaveAttribute('aria-live', 'polite')
     expect(balanceChange).toHaveAttribute('aria-atomic', 'true')
+  })
+
+  it('should render the account switcher', () => {
+    renderBalanceCard()
+    expect(screen.getByTestId('account-switcher')).toBeInTheDocument()
   })
 })

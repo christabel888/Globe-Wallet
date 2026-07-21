@@ -11,6 +11,7 @@ import { ArrowLeft, ArrowUpDown, TrendingUp, Info, AlertCircle } from "lucide-re
 import Link from "next/link"
 import { toast } from "sonner"
 import { ratesService, type ExchangeRate } from "@/lib/services/rates.service"
+import { deriveToAmount, deriveFromAmount } from "@/lib/helpers/conversion-math"
 import type { AssetCode } from "@/lib/types"
 
 export default function ConvertPage() {
@@ -62,13 +63,10 @@ export default function ConvertPage() {
     const rate = getCurrentRate()?.rate
     if (!rate || !amount) return ""
 
-    const numAmount = parseFloat(amount)
-    if (isNaN(numAmount)) return ""
-
     if (isFromAmount) {
-      return (numAmount * rate).toFixed(6)
+      return deriveToAmount(amount, rate)
     } else {
-      return (numAmount / rate).toFixed(6)
+      return deriveFromAmount(amount, rate)
     }
   }
 

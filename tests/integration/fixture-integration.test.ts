@@ -83,6 +83,8 @@ describe('API Routes - Mock Centralization (Issue #14)', () => {
     it('should return 200 for valid payload', async () => {
       const req = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: JSON.stringify(validBody),
       })
       const response = await sendPOST(req)
@@ -97,6 +99,8 @@ describe('API Routes - Mock Centralization (Issue #14)', () => {
     it('should return 422 for empty destination', async () => {
       const req = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: JSON.stringify({ ...validBody, destination: '' }),
       })
       const response = await sendPOST(req)
@@ -106,6 +110,8 @@ describe('API Routes - Mock Centralization (Issue #14)', () => {
     it('should return 422 for negative amount', async () => {
       const req = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: JSON.stringify({ ...validBody, amount: -100 }),
       })
       const response = await sendPOST(req)
@@ -115,6 +121,8 @@ describe('API Routes - Mock Centralization (Issue #14)', () => {
     it('should return 400 for invalid JSON', async () => {
       const req = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: 'not json',
       })
       const response = await sendPOST(req)
@@ -124,6 +132,8 @@ describe('API Routes - Mock Centralization (Issue #14)', () => {
     it('should return 422 for invalid Stellar address', async () => {
       const req = new NextRequest('http://localhost/api/wallet/send', {
         method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+
         body: JSON.stringify({ ...validBody, destination: 'invalid' }),
       })
       const response = await sendPOST(req)

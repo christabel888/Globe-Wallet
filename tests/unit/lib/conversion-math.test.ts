@@ -12,6 +12,8 @@
  * All functions are tested in isolation — no service or React imports.
  */
 
+import fc from 'fast-check'
+import Decimal from 'decimal.js'
 import {
   applyConversionRate,
   applyReverseRate,
@@ -249,5 +251,28 @@ describe('formatConversionRate', () => {
   it('formats large rates correctly', () => {
     const result = formatConversionRate('USDC', 'XLM', 10.53)
     expect(result).toContain('10.530000')
+  })
+})
+
+// ─── Property-Based Tests: Round-Trip Conversion ─────────────────────────────
+
+describe('Round-Trip Conversion Property', () => {
+  it('should round-trip correctly for representative amounts and rates', () => {
+    const cases: Array<[string, number]> = [
+      ['100', 0.095],
+      ['1', 10.53],
+      ['0.5', 1],
+      ['1234.567890', 0.5],
+      ['0.000001', 2],
+    ]
+
+    for (const [fromAmountStr, rate] of cases) {
+      const toAmount = deriveToAmount(fromAmountStr, rate)
+      const roundTripped = deriveFromAmount(toAmount, rate)
+      const originalWith6dp = new Decimal(fromAmountStr).toFixed(6)
+      expect(new Decimal(roundTripped).minus(originalWith6dp).abs().toNumber()).toBeLessThanOrEqual(
+        0.00001,
+      )
+    }
   })
 })
